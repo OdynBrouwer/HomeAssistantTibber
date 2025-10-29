@@ -1,8 +1,4 @@
-<p align="center">
-  <img src="logo.png" alt="Tibber Advanced Logo" width="400">
-</p>
-
-# Tibber Advanced Integration for Home Assistant
+# <img width="64" height="64" alt="Tibber Advanced" src="icon.png" /> Tibber Advanced Integration for Home Assistant
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 [![GitHub Release](https://img.shields.io/github/release/mupsje/HomeAssistantTibber.svg)](https://github.com/OdynBrouwer/HomeAssistantTibber/releases)
