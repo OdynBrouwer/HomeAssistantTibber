@@ -35,7 +35,7 @@ class Tibber:
         time_zone: dt.tzinfo | None = None,
         user_agent: str | None = None,
         tax_rate: float = 0,
-        surcharge_price_excl: float = 0,
+        surcharge_price_incl: float = 0.1228,  # Default Tibber surcharge incl BTW
         tax_per_kwh: float = 0,
         
     ):
@@ -46,6 +46,9 @@ class Tibber:
         :param websession: The websession to use when communicating with the Tibber API.
         :param time_zone: The time zone to display times in and to use.
         :param user_agent: User agent identifier for the platform running this. Required if websession is None.
+        :param tax_rate: BTW percentage (default: 0)
+        :param surcharge_price_incl: Tibber surcharge including BTW (default: 0.1228)
+        :param tax_per_kwh: Energy tax per kWh (default: 0)
         """
 
         if websession is None:
@@ -59,9 +62,12 @@ class Tibber:
         self.timeout: int = timeout
         self._access_token: str = access_token
         self._tax_rate = 1.0 + tax_rate/100.0
-
-        self._surcharge_price_excl=surcharge_price_excl
-        self._tax_per_kwh=tax_per_kwh
+        self._tax_rate_percentage = tax_rate
+        
+        # Automatically calculate surcharge_price_excl from surcharge_price_incl
+        self._surcharge_price_incl = surcharge_price_incl
+        self._surcharge_price_excl = surcharge_price_incl / self._tax_rate
+        self._tax_per_kwh = tax_per_kwh
         self.realtime: TibberRT = TibberRT(
             self._access_token,
             self.timeout,
@@ -122,12 +128,18 @@ class Tibber:
                 _LOGGER.exception("Error connecting to Tibber")
             raise
         except (InvalidLoginError, FatalHttpExceptionError) as err:
-            _LOGGER.error(
-                "Fatal error interacting with Tibber API, HTTP status: %s. API error: %s / %s",
-                err.status,
-                err.extension_code,
-                err.message,
-            )
+            # 504 Gateway Timeout is een tijdelijk server probleem, niet fataal
+            if err.status == 504:
+                _LOGGER.warning(
+                    "Tibber API server timeout (504), wordt automatisch opnieuw geprobeerd"
+                )
+            else:
+                _LOGGER.error(
+                    "Fatale fout bij Tibber API communicatie, HTTP status: %s. API error: %s / %s",
+                    err.status,
+                    err.extension_code,
+                    err.message,
+                )
             raise
         except RetryableHttpExceptionError as err:
             _LOGGER.warning(
@@ -232,9 +244,14 @@ class Tibber:
         return self._tax_rate
 
     @property
-    def surcharge_price_excl(self) -> str | None:
-        """Return user id of user."""
+    def surcharge_price_excl(self) -> float:
+        """Return the Tibber surcharge excluding BTW."""
         return self._surcharge_price_excl
+
+    @property
+    def surcharge_price_incl(self) -> float:
+        """Return the Tibber surcharge including BTW."""
+        return self._surcharge_price_incl
     
     @property
     def tax_per_kwh(self) -> str | None:

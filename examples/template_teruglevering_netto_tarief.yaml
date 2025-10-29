@@ -1,0 +1,122 @@
+# Template Sensor: Teruglevering Netto Tarief
+# 
+# Dit berekent wat je écht overhoudt per kWh bij teruglevering van zonnepanelen,
+# rekening houdend met de Nederlandse salderingsregels.
+#
+# INSTALLATIE:
+# Kopieer deze code naar je configuration.yaml of templates.yaml
+#
+# LET OP:
+# Vervang "tibber_pulse_JOUW_ADRES" met je eigen sensor naam!
+# Je kunt je sensor naam vinden in Developer Tools > States
+
+# ==============================================================================
+# VERSIE 1: Tot 2027 (met energiebelasting terugbetaling)
+# ==============================================================================
+# Gebruik deze tot eind 2026, want je krijgt nog energiebelasting terug!
+
+template:
+  - sensor:
+      - name: "Teruglevering Netto Tarief"
+        unique_id: feed_in_net_rate
+        unit_of_measurement: "EUR/kWh"
+        device_class: monetary
+        state_class: measurement
+        icon: mdi:solar-power
+        state: >
+          {% set spotprijs = states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) %}
+          {% set eb_incl = states('sensor.tibber_pulse_JOUW_ADRES_electricity_energy_tax_incl_vat') | float(0) %}
+          {{ ((spotprijs * 1.21) + eb_incl) | round(4) }}
+        availability: >
+          {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') not in ['unavailable', 'unknown', 'none'] }}
+        attributes:
+          spotprijs: >
+            {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) }}
+          spotprijs_incl_btw: >
+            {{ (states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) * 1.21) | round(4) }}
+          eb_refund: >
+            {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_energy_tax_incl_vat') | float(0) }}
+          geldig_tot: "2026-12-31"
+          toelichting: "Spotprijs × 1.21 + energiebelasting terugbetaling (dynamisch)"
+
+# ==============================================================================
+# VERSIE 2: Na 2027 (zonder energiebelasting terugbetaling)
+# ==============================================================================
+# Gebruik deze vanaf 1 januari 2027, want dan krijg je GEEN energiebelasting meer terug!
+# Haal de commentaar (#) weg van onderstaande code en plaats commentaar bij versie 1.
+
+# template:
+#   - sensor:
+#       - name: "Teruglevering Netto Tarief"
+#         unique_id: feed_in_net_rate
+#         unit_of_measurement: "EUR/kWh"
+#         device_class: monetary
+#         state_class: measurement
+#         icon: mdi:solar-power
+#         state: >
+#           {% set spotprijs = states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) %}
+#           {{ (spotprijs * 1.21) | round(4) }}
+#         availability: >
+#           {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') not in ['unavailable', 'unknown', 'none'] }}
+#         attributes:
+#           spotprijs: >
+#             {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) }}
+#           spotprijs_incl_btw: >
+#             {{ (states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) * 1.21) | round(4) }}
+#           eb_refund: 0.0
+#           geldig_vanaf: "2027-01-01"
+#           toelichting: "Alleen spotprijs × 1.21 (geen energiebelasting meer)"
+
+# ==============================================================================
+# UITLEG: Wat gebeurt er hier?
+# ==============================================================================
+#
+# 1. Spotprijs ophalen:
+#    We pakken de Nord Pool spotprijs van Tibber API
+#    Dit kan NEGATIEF zijn bij veel zonnepanelen en weinig vraag!
+#
+# 2. BTW berekenen:
+#    spotprijs × 1.21 = spotprijs inclusief 21% BTW
+#
+# 3. Energiebelasting toevoegen (tot 2027):
+#    We gebruiken nu de DYNAMISCHE sensor van Tibber!
+#    Deze update automatisch als de EB wijzigt.
+#
+# VOORBEELDEN:
+#
+# Spotprijs +0.10 EUR/kWh (EB = 0.12286):
+#   (0.10 × 1.21) + 0.12286 = 0.121 + 0.12286 = 0.24386 EUR/kWh
+#   → Je krijgt 24 cent per kWh ✅
+#
+# Spotprijs -0.05 EUR/kWh (negatieve prijs!):
+#   (-0.05 × 1.21) + 0.12286 = -0.0605 + 0.12286 = 0.06236 EUR/kWh
+#   → Je krijgt nog steeds 6 cent per kWh! ✅ (tot 2027)
+#
+# Spotprijs -0.15 EUR/kWh (zeer negatief):
+#   (-0.15 × 1.21) + 0.12286 = -0.1815 + 0.12286 = -0.05864 EUR/kWh
+#   → Je betaalt 6 cent per kWh ❌ (schakel uit!)
+#
+# Na 2027 zonder energiebelasting:
+# Spotprijs -0.05 EUR/kWh:
+#   -0.05 × 1.21 = -0.0605 EUR/kWh
+#   → Je betaalt 6 cent per kWh ❌ (schakel altijd uit bij negatief!)
+#
+# ==============================================================================
+# WAAROM DYNAMISCHE SENSOR GEBRUIKEN?
+# ==============================================================================
+#
+# ✅ VOORDELEN van electricity_energy_tax_incl_vat sensor:
+# - Update automatisch als de regering de EB wijzigt
+# - Geen handmatige aanpassing nodig in 2026, 2027, etc.
+# - Haalt de waarde uit je Tibber configuratie
+#
+# ⚠️ LET OP:
+# De electricity_energy_tax_incl_vat sensor bevat de EB die je BETAALT bij verbruik.
+# Bij teruglevering krijg je (tot 2027) DEZELFDE waarde terug via saldering.
+# 
+# Vanaf 2027:
+# - electricity_energy_tax_incl_vat blijft bestaan voor verbruik
+# - Maar je krijgt deze NIET meer terug bij teruglevering
+# - Gebruik dan VERSIE 2 (zonder EB)
+#
+# ==============================================================================

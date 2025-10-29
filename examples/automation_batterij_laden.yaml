@@ -1,0 +1,163 @@
+# Automatisering: Batterij Laden bij Negatieve Prijzen
+#
+# Deze automatisering laadt je thuisbatterij automatisch op wanneer de spotprijs
+# negatief is. Je krijgt dan betaald om stroom te verbruiken!
+#
+# INSTALLATIE:
+# Kopieer deze code naar je automations.yaml
+#
+# BELANGRIJK:
+# Vervang "switch.battery_charging" met jouw eigen batterij switch!
+
+alias: "Batterij laden bij negatieve spotprijs"
+description: "Start batterij opladen wanneer je betaald wordt om stroom te gebruiken"
+
+trigger:
+  - platform: numeric_state
+    entity_id: sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
+    below: 0
+    # Trigger wanneer spotprijs negatief wordt
+
+condition:
+  - condition: numeric_state
+    entity_id: sensor.battery_soc
+    below: 95
+    # Alleen laden als batterij niet al bijna vol is
+  
+  - condition: state
+    entity_id: switch.battery_charging
+    state: "off"
+    # Alleen als laden nog niet actief is
+
+action:
+  # Stap 1: Start batterij laden
+  - service: switch.turn_on
+    target:
+      entity_id: switch.battery_charging  # ← PAS DIT AAN!
+    data: {}
+  
+  # Stap 2: Stuur notificatie
+  - service: persistent_notification.create
+    data:
+      title: "🔋 Batterij laden gestart"
+      message: >
+        🕒 Tijd: {{ now().strftime('%d-%m-%Y %H:%M:%S') }}
+        
+        💰 Spotprijs: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') }} €/kWh
+        🔋 Batterij: {{ states('sensor.battery_soc') }}%
+        
+        ✅ Je wordt BETAALD om stroom te gebruiken!
+        De batterij wordt nu opgeladen met negatieve prijzen.
+      notification_id: "battery_charging_status"
+
+mode: single
+
+# ==============================================================================
+# TWEEDE AUTOMATISERING: Stop laden wanneer prijs positief wordt
+# ==============================================================================
+
+---
+
+alias: "Batterij laden stoppen bij positieve spotprijs"
+description: "Stop batterij opladen wanneer de prijs weer positief wordt"
+
+trigger:
+  - platform: numeric_state
+    entity_id: sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
+    above: 0
+    # Trigger wanneer spotprijs positief wordt
+
+condition:
+  - condition: state
+    entity_id: switch.battery_charging
+    state: "on"
+    # Alleen als laden actief is
+
+action:
+  # Stap 1: Stop batterij laden
+  - service: switch.turn_off
+    target:
+      entity_id: switch.battery_charging  # ← PAS DIT AAN!
+    data: {}
+  
+  # Stap 2: Stuur notificatie
+  - service: persistent_notification.create
+    data:
+      title: "🔋 Batterij laden gestopt"
+      message: >
+        🕒 Tijd: {{ now().strftime('%d-%m-%Y %H:%M:%S') }}
+        
+        💰 Spotprijs: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') }} €/kWh
+        🔋 Batterij: {{ states('sensor.battery_soc') }}%
+        
+        ℹ️ De prijs is weer positief.
+        Batterij laden gestopt om geld te besparen.
+      notification_id: "battery_charging_status"
+
+mode: single
+
+# ==============================================================================
+# VEELGEBRUIKTE BATTERY SWITCH ENTITIES PER MERK
+# ==============================================================================
+#
+# Vervang "switch.battery_charging" hierboven met één van deze:
+#
+# TESLA POWERWALL:
+#   switch.powerwall_charge_battery
+#   of: select.powerwall_operation_mode (stel in op "Self-Powered" of "Backup")
+#
+# HUAWEI LUNA:
+#   switch.huawei_battery_charge
+#   of: select.huawei_storage_mode (stel in op "Charge from Grid")
+#
+# SOLAREDGE:
+#   switch.solaredge_i1_battery_charge
+#   of: select.solaredge_storage_command_mode
+#
+# LG RESU / GROWATT:
+#   switch.growatt_battery_charge
+#   of: select.growatt_battery_mode
+#
+# SONNEN:
+#   switch.sonnen_battery_charge
+#   of: number.sonnen_battery_reserve (stel in op 100 voor vol laden)
+#
+# ENPHASE ENCHARGE:
+#   select.encharge_mode (stel in op "full backup" of "self consumption")
+#
+# BYD:
+#   switch.byd_battery_charge
+#   of: select.byd_work_mode
+#
+# WEET JE HET NIET?
+# Ga naar Developer Tools > States en zoek naar "battery" of "charge"
+# bij je batterij integratie.
+#
+# ==============================================================================
+# GEAVANCEERDE OPTIE: Slim laden op basis van batterij niveau
+# ==============================================================================
+#
+# In plaats van alleen aan/uit, kun je ook het laadvermogen aanpassen:
+#
+# - Bij zeer negatieve prijzen (< -0.10): Vol vermogen laden
+# - Bij matig negatieve prijzen (-0.10 tot 0): Half vermogen laden
+# - Bij positieve prijzen: Niet laden
+#
+# Voorbeeld voor Tesla Powerwall:
+#
+# action:
+#   - service: number.set_value
+#     target:
+#       entity_id: number.powerwall_charge_rate
+#     data:
+#       value: >
+#         {% set prijs = states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float %}
+#         {% if prijs < -0.10 %}
+#           100
+#         {% elif prijs < 0 %}
+#           50
+#         {% else %}
+#           0
+#         {% endif %}
+#
+# ==============================================================================

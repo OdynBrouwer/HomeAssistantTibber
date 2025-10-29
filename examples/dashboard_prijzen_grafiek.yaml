@@ -1,0 +1,186 @@
+# Dashboard Kaart: Prijzen Grafiek (Apex Charts)
+#
+# Deze kaart toont een mooie grafiek met:
+# - Netto terugleverprijs (groen/rood lijn)
+# - Verbruiksprijs (blauwe lijn)
+# - Spotprijs (grijze lijn)
+# - Historische data van vandaag en morgen
+#
+# VEREISTEN:
+# - ApexCharts card (installeer via HACS)
+#
+# INSTALLATIE APEXCHARTS:
+# 1. Ga naar HACS > Frontend
+# 2. Klik op "+ Verken en download repositories"
+# 3. Zoek naar "ApexCharts Card"
+# 4. Klik op "ApexCharts Card" en installeer
+# 5. Herstart Home Assistant
+# 6. Voeg deze kaart toe aan je dashboard
+#
+# GEBRUIK:
+# 1. Kopieer deze code
+# 2. Dashboard bewerken > + Kaart toevoegen > Handmatig
+# 3. Plak de code en vervang "JOUW_ADRES"
+# 4. Klik op "Opslaan"
+
+type: custom:apexcharts-card
+
+header:
+  show: true
+  title: 📊 Stroomprijs Overzicht
+  show_states: true
+  colorize_states: true
+
+graph_span: 2d  # Toon 2 dagen (vandaag + morgen)
+span:
+  start: day
+
+all_series_config:
+  stroke_width: 3
+  curve: stepline  # Trap-vorm (prijzen veranderen per kwartier)
+  show:
+    legend_value: true
+    in_header: true
+
+series:
+  # ==================================================================
+  # NETTO TERUGLEVERPRIJS (belangrijkste lijn!)
+  # ==================================================================
+  - entity: sensor.teruglevering_netto_tarief
+    name: "Netto teruglevering"
+    type: line
+    stroke_width: 4
+    color: |
+      {% if states('sensor.teruglevering_netto_tarief') | float < 0 %}
+        red
+      {% else %}
+        green
+      {% endif %}
+    show:
+      in_chart: true
+      legend_value: true
+      extremas: true  # Toon min/max punten
+    data_generator: |
+      return entity.attributes.history?.map((entry) => {
+        return [new Date(entry.last_changed).getTime(), entry.state];
+      }) || [];
+  
+  # ==================================================================
+  # VERBRUIKSPRIJS
+  # ==================================================================
+  - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
+    name: "Verbruiksprijs"
+    type: line
+    color: blue
+    opacity: 0.7
+    show:
+      in_chart: true
+      legend_value: true
+  
+  # ==================================================================
+  # SPOTPRIJS (voor referentie)
+  # ==================================================================
+  - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
+    name: "Spotprijs (Nord Pool)"
+    type: line
+    color: gray
+    opacity: 0.5
+    stroke_width: 2
+    show:
+      in_chart: true
+      legend_value: true
+
+# Y-as configuratie
+yaxis:
+  - id: price
+    min: ~-0.15  # Start bij -15 cent (voor negatieve prijzen)
+    max: ~0.50   # Tot 50 cent
+    decimals: 3
+    apex_config:
+      tickAmount: 8
+      title:
+        text: "Prijs (EUR/kWh)"
+
+# Annotaties (markeringen in de grafiek)
+apex_config:
+  chart:
+    height: 400
+  xaxis:
+    labels:
+      format: HH:mm
+      datetimeUTC: false
+  annotations:
+    yaxis:
+      # Markeer de 0-lijn (positief/negatief scheiding)
+      - y: 0
+        borderColor: '#FF0000'
+        strokeDashArray: 5
+        label:
+          text: 'Break-even'
+          style:
+            background: '#FF0000'
+            color: '#FFFFFF'
+  
+  tooltip:
+    enabled: true
+    shared: true
+    x:
+      format: 'dd MMM HH:mm'
+
+# ==============================================================================
+# ALTERNATIEVE VERSIE: Compacte grafiek met kleuren
+# ==============================================================================
+# Simpelere versie zonder apex configuratie. Verwijder alles hierboven en gebruik:
+
+# type: custom:apexcharts-card
+# header:
+#   show: true
+#   title: Prijzen Vandaag
+# graph_span: 24h
+# series:
+#   - entity: sensor.teruglevering_netto_tarief
+#     name: "Netto teruglevering"
+#     type: column
+#     color: auto
+#     stroke_width: 2
+#   - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
+#     name: "Verbruiksprijs"
+#     type: line
+#     stroke_width: 2
+
+# ==============================================================================
+# EXTRA VERSIE: Met huidige status indicator
+# ==============================================================================
+# Voeg deze cards toe voor een compleet dashboard:
+
+---
+
+# Status card bovenaan
+type: horizontal-stack
+cards:
+  - type: entity
+    entity: sensor.teruglevering_netto_tarief
+    name: "💰 Nu"
+    icon: mdi:cash
+    card_mod:
+      style: |
+        ha-card {
+          background: {% if states('sensor.teruglevering_netto_tarief') | float < 0 %}#ff000020{% else %}#00ff0020{% endif %};
+        }
+  
+  - type: entity
+    entity: sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
+    name: "📈 Spot"
+    icon: mdi:chart-line
+  
+  - type: entity
+    entity: switch.omvormer_export
+    name: "⚡ Export"
+    icon: mdi:export
+    tap_action:
+      action: toggle
+
+# Grafiek card eronder
+# (gebruik een van de grafieken hierboven)
+
+# ==============================================================================

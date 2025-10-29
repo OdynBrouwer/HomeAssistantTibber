@@ -19,6 +19,70 @@
     },
     "entity": {
         "sensor": {
+            "electricity_price": {
+                "name": "Strompreis gesamt",
+                "state": "Gesamter Verbrauchspreis pro kWh von Tibber API (Spotpreis + alle Kosten inkl. MwSt). Für Verbrauchsentscheidungen verwenden."
+            },
+            "electricity_price_excl": {
+                "name": "Preis exkl. Steuer (berechnet)",
+                "state": "Preis vor Steuer: {0}/kWh"
+            },
+            "electricity_price_excl_cent": {
+                "name": "Preis exkl. Steuer in Cent (berechnet)",
+                "state": "Preis vor Steuer: {0} Cent/kWh"
+            },
+            "electricity_price_calc": {
+                "name": "Gesamtpreis (berechnet)",
+                "state": "Berechnet: {0}/kWh = (Energie + Zuschlag + Steuer) × MwSt"
+            },
+            "electricity_price_excl_base": {
+                "name": "Basisenergiepreis ohne Zuschlag",
+                "state": "Nord Pool Spotpreis von Tibber API (energy Feld). Für Einspeiseentscheidungen verwenden (kann negativ sein)."
+            },
+            "electricity_price_surcharge_excl": {
+                "name": "Zuschlag exkl. MwSt (konfiguriert)",
+                "state": "Fester Zuschlag: {0}/kWh (vor MwSt)"
+            },
+            "electricity_price_surcharge_incl": {
+                "name": "Zuschlag inkl. MwSt (berechnet)",
+                "state": "Fester Zuschlag: {0}/kWh (mit MwSt)"
+            },
+            "electricity_price_energy_tax_excl": {
+                "name": "Energiesteuer exkl. MwSt (konfiguriert)",
+                "state": "Steuer pro kWh: {0} (vor MwSt)"
+            },
+            "electricity_price_energy_tax_incl": {
+                "name": "Energiesteuer inkl. MwSt (berechnet)",
+                "state": "Steuer pro kWh: {0} (mit MwSt)"
+            },
+            "electricity_price_hist": {
+                "name": "Basisenergiepreis (historisch)",
+                "state": "Historischer Basispreis: {0}/kWh"
+            },
+            "hour_cheapest_top": {
+                "name": "Preisrang im Tag (0-1)",
+                "state": "{0} im 24h Bereich (0=günstig, 1=teuer)"
+            },
+            "hour_cheapest_top_after_0000": {
+                "name": "Nachtrang (0-1)",
+                "state": "{0} vs Nacht 00:00-08:00"
+            },
+            "hour_cheapest_top_after_0800": {
+                "name": "Tagesrang (0-1)",
+                "state": "{0} vs Tag 08:00-18:00"
+            },
+            "hour_cheapest_top_after_1800": {
+                "name": "Abendrang (0-1)",
+                "state": "{0} vs Abend 18:00-00:00"
+            },
+            "tax_rate": {
+                "name": "MwSt Satz % (konfiguriert)",
+                "state": "MwSt: {0}%"
+            },
+            "tax_per_kwh": {
+                "name": "Steuer pro kWh (konfiguriert)",
+                "state": "Zusätzliche Steuer: {0}/kWh"
+            },
             "accumulated_consumption": {
                 "name": "Kumulierter Verbrauch"
             },
@@ -49,9 +113,7 @@
             "current_l3": {
                 "name": "Strom L3"
             },
-            "electricity_price": {
-                "name": "Strompreis"
-            },
+            
             "estimated_hour_consumption": {
                 "name": "Gesch\u00e4tzter Verbrauch aktuelle Stunde"
             },

@@ -8,13 +8,14 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from gql import gql
+from websockets.exceptions import ConnectionClosedError
 
 from .const import RESOLUTION_HOURLY
 from .gql_queries import (
     HISTORIC_DATA,
     HISTORIC_PRICE,
     LIVE_SUBSCRIBE,
-    PRICE_INFO,
+        PRICE_INFO,
     UPDATE_CURRENT_PRICE,
     UPDATE_INFO,
     UPDATE_INFO_PRICE,
@@ -71,10 +72,9 @@ class TibberHome:
         """
         self._tibber_control = tibber_control
         self._home_id: str = home_id
-        self._current_price_total: float | None = None
-        self._current_price_info: dict[str, float] = {}
-        self._price_info: dict[str, float] = {}
-        self._last_price_upate: dt.datetime | None = None
+        self._current_price_info: dict[str, Any] = {}
+        self._price_info: dict[str, dict[str, Any]] = {}
+        self._last_price_update: dt.datetime | None = None
         self._level_info: dict[str, str] = {}
         self._rt_power: list[tuple[dt.datetime, float]] = []
         self.info: dict[str, dict[Any, Any]] = {}
@@ -232,38 +232,62 @@ class TibberHome:
         if price_info := await self._tibber_control.execute(PRICE_INFO % self.home_id):
             self._process_price_info(price_info)
 
-    def getCurrentPrices(self, hourstart: int, hourend: int) -> int:
-        pricelist =[]
+    def getCurrentPrices(self, hourstart: int, hourend: int) -> float:
+        """Get price rank for the current hour within specified time window.
+        
+        Returns value between 0-1, where:
+        - 0 = cheapest hour in window
+        - 1 = most expensive hour in window
+        - 0.5 = median price
+        """
+        pricelist = []
+        now = dt.datetime.now().astimezone(self._tibber_control.time_zone)
+        
+        # Collect all prices for today within the specified window
         for date in self._price_info:
-            if self._price_info[date]['timestamp'].day == dt.datetime.now().day:
-                if (self._price_info[date]['timestamp'].hour >= hourstart) and (self._price_info[date]['timestamp'].hour <=hourend):
-                    pricelist.append({'hour' :self._price_info[date]['timestamp'].hour ,
-                                    'price': self._price_info[date]['energy_wsi']
-                                    }
-                                    )
-
-        pricetime = dt.datetime.now().astimezone(self._tibber_control.time_zone)
-        #_LOGGER.warning(pricetime)
-        #_LOGGER.warning(pricelist)
-        return self.current_price_rank(pricelist,pricetime) or 24
+            timestamp = self._price_info[date]['timestamp']
+            if timestamp.day == now.day:
+                if hourstart <= timestamp.hour <= hourend:
+                    pricelist.append({
+                        'hour': timestamp.hour,
+                        'price': self._price_info[date]['energy_wsi']
+                    })
+        
+        if not pricelist:
+            return 1.0  # Default to most expensive if no data
+            
+        # Sort prices to determine rank
+        sorted_prices = sorted(pricelist, key=lambda x: x['price'])
+        current_hour = now.hour
+        
+        # Find position of current hour in sorted list
+        for index, price_data in enumerate(sorted_prices):
+            if price_data['hour'] == current_hour:
+                # Convert to 0-1 range where 0 is cheapest
+                return index / (len(sorted_prices) - 1) if len(sorted_prices) > 1 else 0.5
+                
+        return 1.0  # Default to most expensive if current hour not found
 
 
     @property
-    def hour_cheapest_top(self) -> int:
-        return  self.getCurrentPrices(0,23)
+    def hour_cheapest_top(self) -> float:
+        """Get price rank (0-1) for current hour compared to all hours today."""
+        return self.getCurrentPrices(0, 23)
 
+    @property
+    def hour_cheapest_top_after_0000(self) -> float:
+        """Get price rank (0-1) for current hour in night window (00:00-08:00)."""
+        return self.getCurrentPrices(0, 7)
     
     @property
-    def hour_cheapest_top_after_0000(self) -> int:
-        return  self.getCurrentPrices(0,7)
+    def hour_cheapest_top_after_0800(self) -> float:
+        """Get price rank (0-1) for current hour in day window (08:00-18:00)."""
+        return self.getCurrentPrices(8, 17)
     
     @property
-    def hour_cheapest_top_after_0800(self) -> int:
-        return  self.getCurrentPrices(8,17)
-    
-    @property
-    def hour_cheapest_top_after_1800(self) -> int:
-        return  self.getCurrentPrices(18,23)
+    def hour_cheapest_top_after_1800(self) -> float:
+        """Get price rank (0-1) for current hour in evening window (18:00-00:00)."""
+        return self.getCurrentPrices(18, 23)
 
     def _process_price_info(self, price_info: dict[str, dict[str, Any]]) -> None:
         """Processes price information retrieved from a GraphQL query.
@@ -277,7 +301,11 @@ class TibberHome:
             return
         self._price_info = {}
         self._level_info = {}
-        self._last_price_upate = dt.datetime.now().astimezone(self._tibber_control.time_zone)
+        # record when price info was last processed
+        self._last_price_update = dt.datetime.now().astimezone(self._tibber_control.time_zone)
+
+        total_entries = 0
+        non_quarter_entries = 0
 
         for key in ["current", "today", "tomorrow"]:
             try:
@@ -286,14 +314,41 @@ class TibberHome:
                 _LOGGER.error("Could not find price info for %s.", key)
                 continue
             if key == "current":
+                # current is a single dict with the active price
                 self._current_price_info = price_info_k
+                _LOGGER.debug(
+                    "Current price received: total=%s startsAt=%s",
+                    price_info_k.get("total"),
+                    price_info_k.get("startsAt"),
+                )
+                # don't continue here; current may also be included in price_info_k structure,
+                # but we skip iterating it as a list below
                 continue
             for data in price_info_k:
+                total_entries += 1
+                # Inspect startsAt to detect quarter-hour timestamps
+                starts_at = data.get("startsAt")
+                try:
+                    ts = dt.datetime.fromisoformat(starts_at)
+                    minute = ts.minute
+                    if minute not in (0, 15, 30, 45):
+                        non_quarter_entries += 1
+                        _LOGGER.debug(
+                            "Non-quarter timestamp in priceInfo: %s (minute=%s)",
+                            starts_at,
+                            minute,
+                        )
+                except Exception:
+                    # ignore parse errors but count entry
+                    _LOGGER.debug("Could not parse startsAt: %s", starts_at)
+
                 self._price_info[data.get("startsAt")] = { 
-                    'total': data.get("total"),
-                    'energy': data.get("energy"),
+                    'total': data.get("total"),  # The total price (energy + taxes)
+                    'energy': data.get("energy"),  # Nord Pool spot price
                     'energy_ws': data.get("energy") + self._tibber_control.surcharge_price_excl,
                     'energy_wsi': (data.get("energy") + self._tibber_control.surcharge_price_excl) *self._tibber_control.tax_rate,
+                    # The tax part of the price (guarantee of origin certificate, energy tax (Sweden only) and VAT)
+                    # NOTE: For non-Swedish countries, this includes VAT on the spot price + other fixed costs
                     'tax': data.get("tax"),
                     'timestamp' :   dt.datetime.fromisoformat(data.get("startsAt"))                 
                 }
@@ -303,6 +358,12 @@ class TibberHome:
                     or dt.datetime.fromisoformat(data.get("startsAt")) > self.last_data_timestamp
                 ):
                     self.last_data_timestamp = dt.datetime.fromisoformat(data.get("startsAt"))
+
+        _LOGGER.debug(
+            "Processed priceInfo: total_entries=%s non_quarter_entries=%s",
+            total_entries,
+            non_quarter_entries,
+        )
 
 
 
@@ -356,35 +417,50 @@ class TibberHome:
     @property
     def electricity_price(self) -> float | None:
         """Get current price total."""
+        # Prefer a matching quarter-hour entry from the populated price_info
+        # If an entry in self._price_info has a timestamp that covers the
+        # current time (within a 15 minute window) return that entry's total.
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+
+        # search _price_info for an entry where now is >= timestamp and < timestamp + 15min
+        try:
+            for entry in self._price_info.values():
+                ts = entry.get("timestamp")
+                if not isinstance(ts, dt.datetime):
+                    continue
+                if ts <= now < (ts + dt.timedelta(minutes=15)):
+                    return entry.get("total")
+        except Exception:
+            # if _price_info is not populated or has unexpected structure, fall back
+            pass
+
+        # fallback to current price info (may come from UPDATE_CURRENT_PRICE)
         if not self._current_price_info:
             return None
         return self._current_price_info.get("total")
     
     @property
     def electricity_price_calc(self) -> float | None:
-        """Get current price total."""
-        if not self._current_price_info:
+        """Get calculated total price including all components."""
+        # Get the current energy price (quarter-hourly aware)
+        energy = self.electricity_price_excl_base
+        if energy is None:
             return None
-        return (self._current_price_info.get("energy") + self._tibber_control.surcharge_price_excl + self._tibber_control.tax_per_kwh)* self._tibber_control.tax_rate 
-    
+            
+        surcharge = float(self._tibber_control.surcharge_price_excl or 0)
+        tax_per_kwh = float(self._tibber_control.tax_per_kwh or 0)
+        tax_rate = float(self._tibber_control.tax_rate or 1.0)
+        
+        return (energy + surcharge + tax_per_kwh) * tax_rate
 
-
-
-    
     @property
     def tax_rate(self) -> float | None:
-        """Get current price total."""
-
-        return (self._tibber_control.tax_rate-1) * 100
-
-    @property
-    def electricity_price_excl_base(self) -> float | None:
-        """Get current price total."""
-        if not self._current_price_info:
+        """Get tax rate as percentage."""
+        try:
+            rate = float(self._tibber_control.tax_rate or 1.0)
+            return (rate - 1.0) * 100
+        except (ValueError, TypeError):
             return None
-        return self._current_price_info.get("energy")
-
-
 
     @property
     def electricity_price_surcharge_excl(self) -> float | None:
@@ -394,51 +470,83 @@ class TibberHome:
 
     @property
     def electricity_price_surcharge_incl(self) -> float | None:
-        """Get current price total."""
-
-        return  self._tibber_control.surcharge_price_excl * self._tibber_control.tax_rate 
-       
+        """Get surcharge including tax."""
+        try:
+            surcharge = float(self._tibber_control.surcharge_price_excl or 0)
+            tax_rate = float(self._tibber_control.tax_rate or 1.0)
+            return surcharge * tax_rate
+        except (ValueError, TypeError):
+            return None
 
     @property
     def electricity_price_energy_tax_excl(self) -> float | None:
-        """Get current price total."""
-        return self._tibber_control.tax_per_kwh 
-    
+        """Get energy tax excluding VAT."""
+        try:
+            return float(self._tibber_control.tax_per_kwh or 0)
+        except (ValueError, TypeError):
+            return None
+
     @property
     def electricity_price_energy_tax_incl(self) -> float | None:
-        """Get current price total."""
-        return self._tibber_control.tax_per_kwh   * self._tibber_control.tax_rate 
-
+        """Get energy tax including VAT."""
+        try:
+            tax = float(self._tibber_control.tax_per_kwh or 0)
+            tax_rate = float(self._tibber_control.tax_rate or 1.0)
+            return tax * tax_rate
+        except (ValueError, TypeError):
+            return None
 
     @property
-    def electricity_price_hist(self) -> float | None:
-        """Get current price total."""
+    def electricity_price_excl_base(self) -> float | None:
+        """Get the base price without surcharge (energy field from API)."""
+        # Prefer a matching quarter-hour entry from the populated price_info
+        # If an entry in self._price_info has a timestamp that covers the
+        # current time (within a 15 minute window) return that entry's energy.
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+
+        # search _price_info for an entry where now is >= timestamp and < timestamp + 15min
+        try:
+            for entry in self._price_info.values():
+                ts = entry.get("timestamp")
+                if not isinstance(ts, dt.datetime):
+                    continue
+                if ts <= now < (ts + dt.timedelta(minutes=15)):
+                    return entry.get("energy")
+        except Exception:
+            # if _price_info is not populated or has unexpected structure, fall back
+            pass
+
+        # fallback to current price info (may come from UPDATE_CURRENT_PRICE)
         if not self._current_price_info:
             return None
-        return self._current_price_info.get("energy") + self._tibber_control.surcharge_price_excl 
-    
+        return self._current_price_info.get("energy")
+
 
     @property
     def electricity_price_excl(self) -> float | None:
-        """Get current price total."""
-        if not self._current_price_info:
+        """Get price including surcharge but excluding tax."""
+        # Get the current energy price (quarter-hourly aware)
+        energy = self.electricity_price_excl_base
+        if energy is None:
             return None
-        return (self._current_price_info.get("energy")+ self._tibber_control.surcharge_price_excl )* self._tibber_control.tax_rate 
-    
+        try:
+            surcharge = float(self._tibber_control.surcharge_price_excl or 0)
+            return energy + surcharge
+        except (ValueError, TypeError):
+            return None
 
     @property
     def electricity_price_excl_cent(self) -> float | None:
-        """Get current price total."""
-        if not self._current_price_info:
-            return None
-        return (self._current_price_info.get("energy")+ self._tibber_control.surcharge_price_excl ) *100* self._tibber_control.tax_rate 
+        """Get price excluding tax in cents."""
+        price = self.electricity_price_excl
+        return price * 100 if price is not None else None
     
 
 
     @property
-    def last_price_update(self) -> dt.datetime:
+    def last_price_update(self) -> dt.datetime | None:
         """Get last price update."""
-        return self._last_price_upate
+        return self._last_price_update
 
 
     @property
@@ -496,13 +604,31 @@ class TibberHome:
         return "kWh"
 
     @property
-    def currency(self) -> str:
+    def currency(self) -> str | None:
         """Return the currency."""
         try:
             return self.info["viewer"]["home"]["currentSubscription"]["priceInfo"]["current"]["currency"]
         except (KeyError, TypeError, IndexError):
-            _LOGGER.error("Could not find currency.")
-        return ""
+            _LOGGER.debug("Could not find currency in home.info.")
+            return None
+
+    @property
+    def price_source(self) -> str:
+        """Return which price source is being used for `electricity_price`.
+
+        Possible values: 'quarter_hour' or 'current' (fallback).
+        """
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        try:
+            for entry in self._price_info.values():
+                ts = entry.get("timestamp")
+                if not isinstance(ts, dt.datetime):
+                    continue
+                if ts <= now < (ts + dt.timedelta(minutes=15)):
+                    return "quarter_hour"
+        except Exception:
+            pass
+        return "current"
 
     @property
     def country(self) -> str:
@@ -529,46 +655,73 @@ class TibberHome:
             return ""
         return self.currency + "/" + self.consumption_unit
 
-    def current_price_rank(self, price_total: dict[str, float], price_time: dt.datetime | None) -> int | None:
-        """Gets the rank (1-24) of how expensive the current price is compared to the other prices today."""
-        # No price -> no rank
-        if price_time is None:
-            #_LOGGER.warning("price_time is none")
+    def current_price_rank(self, price_total: list[dict[str, float]], price_time: dt.datetime | None) -> float | None:
+        """Get normalized rank (0-1) of current price compared to other prices today.
+        
+        Args:
+            price_total: List of price dictionaries with 'hour' and 'price' keys
+            price_time: The timestamp to get rank for
+            
+        Returns:
+            float between 0-1 where:
+            - 0 = cheapest price of the day
+            - 1 = most expensive price of the day
+            - None if price cannot be ranked
+        """
+        if price_time is None or not price_total:
+            return None
+            
+        try:
+            # Sort prices from lowest to highest
+            sorted_prices = sorted(price_total, key=lambda x: float(x['price']))
+            
+            # Find position of current price
+            current_hour = price_time.hour
+            for index, price_data in enumerate(sorted_prices):
+                if price_data['hour'] == current_hour:
+                    # Convert to 0-1 range
+                    return index / (len(sorted_prices) - 1) if len(sorted_prices) > 1 else 0.5
+                    
+            return None
+            
+        except (KeyError, ValueError, ZeroDivisionError):
+            _LOGGER.warning("Could not calculate price rank", exc_info=True)
             return None
 
+    def current_price_data(self) -> tuple[float | None, dt.datetime | None, float | None]:
+        """Get current price data.
         
-        #_LOGGER.warning("current_price_rank: price_items_typed")
-        #_LOGGER.warning(price_items_typed)
-
-        # Filter out prices not from today, sort by price
-        prices_today_sorted = sorted(
-            price_total,
-            key=lambda x: x['price'],
-        )
-
-        #_LOGGER.warning("current_price_rank: prices_today_sorted")
-        #_LOGGER.warning(prices_today_sorted)
-        # Find the rank of the current price
-        try:
-            price_rank = next(idx for idx, item in enumerate(prices_today_sorted, start=1) if item['hour'] == price_time.hour)
-        except StopIteration:
-            price_rank = None
-
-
-        #_LOGGER.warning("current_price_rank: price_rank")
-        #_LOGGER.warning(price_rank)
-        return price_rank
-
-    def current_price_data(self) -> tuple[float | None, str | None, dt.datetime | None, int | None]:
-        """Get current price."""
+        Returns:
+            Tuple containing:
+            - Current price (float or None)
+            - Price timestamp (datetime or None)
+            - Price rank 0-1 (float or None)
+        """
         now = dt.datetime.now(self._tibber_control.time_zone)
-        for key, price in self.price_total.items():
+        
+        # Convert price_total to list format needed for ranking
+        price_list = []
+        for timestamp, data in self._price_info.items():
+            price_time = dt.datetime.fromisoformat(timestamp).astimezone(self._tibber_control.time_zone)
+            if price_time.date() == now.date():
+                price_list.append({
+                    'hour': price_time.hour,
+                    'price': data.get('total', 0)
+                })
+        
+        # Find current price
+        for key, data in self._price_info.items():
             price_time = dt.datetime.fromisoformat(key).astimezone(self._tibber_control.time_zone)
             time_diff = (now - price_time).total_seconds() / MIN_IN_HOUR
+            
             if 0 <= time_diff < MIN_IN_HOUR:
-                price_rank = self.current_price_rank(self.price_total, price_time)
-                return round(price, 3), self.price_level[key], price_time, price_rank
-        return None, None, None, None
+                price = data.get('total')
+                if price is not None:
+                    price = round(float(price), 3)
+                rank = self.current_price_rank(price_list, price_time)
+                return price, price_time, rank
+                
+        return None, None, None
 
     async def rt_subscribe(self, callback: Callable[..., Any]) -> None:
         """Connect to Tibber and subscribe to Tibber real time subscription.
@@ -630,8 +783,19 @@ class TibberHome:
                     if self._rt_stopped or not self._tibber_control.realtime.subscription_running:
                         _LOGGER.debug("Stopping rt_subscribe loop")
                         return
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error in rt_subscribe")
+            except ConnectionClosedError as err:
+                _LOGGER.warning(
+                    "WebSocket verbinding verbroken voor %s (wordt automatisch hersteld): %s",
+                    self.name,
+                    str(err),
+                )
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.error(
+                    "Fout in realtime data ontvangst voor %s: %s",
+                    self.name,
+                    str(err),
+                    exc_info=True,
+                )
 
         self._rt_callback = callback
         self._rt_listener = asyncio.create_task(_start())

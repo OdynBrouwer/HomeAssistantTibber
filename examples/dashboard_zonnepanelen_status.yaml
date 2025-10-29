@@ -1,0 +1,201 @@
+# Dashboard Kaart: Zonnepanelen Status Overzicht
+#
+# Deze dashboard kaart geeft een compleet overzicht van:
+# - Actuele spotprijs
+# - Netto terugleverprijs
+# - Verbruiksprijs
+# - Status teruglevering (aan/uit)
+# - Huidige productie
+#
+# INSTALLATIE:
+# 1. Ga naar je Home Assistant dashboard
+# 2. Klik op de 3 puntjes rechtsboven > "Bewerken dashboard"
+# 3. Klik op "+ Kaart toevoegen"
+# 4. Kies "Handmatig" onderaan
+# 5. Kopieer de code hieronder
+# 6. Vervang "JOUW_ADRES" met je eigen sensor naam
+# 7. Klik op "Opslaan"
+
+# ==============================================================================
+# VERSIE 1: BASIS ENTITIES CARD (geen custom cards nodig)
+# ==============================================================================
+
+type: entities
+title: 🌞 Zonnepanelen Status
+show_header_toggle: false
+state_color: true
+
+entities:
+  # Spotprijs van Nord Pool (basis voor berekeningen)
+  - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
+    name: "Spotprijs (Nord Pool)"
+    icon: mdi:chart-line
+    secondary_info: last-changed
+  
+  # Netto terugleverprijs (wat je écht overhoudt)
+  - entity: sensor.teruglevering_netto_tarief
+    name: "💰 Netto teruglevering"
+    icon: mdi:cash-multiple
+    secondary_info: last-changed
+  
+  # Verbruiksprijs (wat je betaalt als je stroom gebruikt)
+  - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
+    name: "⚡ Verbruiksprijs"
+    icon: mdi:lightning-bolt
+    secondary_info: last-changed
+  
+  # Visuele scheiding
+  - type: divider
+  
+  # Status teruglevering (is export aan of uit?)
+  - entity: switch.omvormer_export
+    name: "🔌 Teruglevering actief"
+    icon: mdi:export
+    secondary_info: last-changed
+  
+  # Visuele scheiding
+  - type: divider
+  
+  # Huidige zonnepanelen productie (vermogen)
+  - entity: sensor.tibber_pulse_JOUW_ADRES_power_production
+    name: "☀️ Huidige productie"
+    icon: mdi:solar-power
+    secondary_info: last-changed
+  
+  # Opgewekte energie dit uur
+  - entity: sensor.tibber_pulse_JOUW_ADRES_accumulated_production_current_hour
+    name: "📊 Opgewekt dit uur"
+    icon: mdi:solar-panel
+    secondary_info: last-changed
+  
+  # Optioneel: Batterij status (verwijder # om te activeren)
+  # - entity: sensor.battery_soc
+  #   name: "🔋 Batterij"
+  #   icon: mdi:battery
+  #   secondary_info: last-changed
+
+# ==============================================================================
+# VERSIE 2: SOLAR BAR CARD (visuele energie flow)
+# ==============================================================================
+# Installeer eerst via HACS: "Solar Bar Card"
+# Verwijder de code hierboven en gebruik deze:
+
+# type: custom:solar-bar-card
+# 
+# # Basis configuratie
+# inverter_size: 10000              # Max vermogen omvormer in Watt (pas aan!)
+# show_header: true
+# header_title: Zonnepanelen Overzicht
+# show_stats: true
+# show_legend: true
+# use_solcast: false
+# color_palette: classic-solar
+# 
+# # PRODUCTIE (zonnepanelen)
+# production_entity: sensor.tibber_pulse_JOUW_ADRES_power_production
+# 
+# # VERBRUIK (wat je gebruikt)
+# self_consumption_entity: sensor.tibber_pulse_JOUW_ADRES_power
+# 
+# # NETWERK (grid)
+# # LET OP: Tibber heeft geen aparte grid_power sensor
+# # Je moet een template sensor maken die dit berekent:
+# # grid_power = power (verbruik) - power_production (productie)
+# # Positief = import van net, Negatief = export naar net
+# grid_power_entity: sensor.grid_power_calculated    # Zie template hieronder!
+# 
+# # EXPORT/IMPORT naar net
+# # Deze zijn optioneel als je grid_power_entity hebt
+# # export_entity: sensor.export_power              # Optioneel
+# # import_entity: sensor.import_power              # Optioneel
+# 
+# # BATTERIJ (alleen als je een batterij hebt)
+# # Verwijder # hieronder als je een batterij hebt
+# # show_battery_flow: true
+# # show_battery_indicator: true
+# # battery_flow_animation_speed: 2
+# # battery_soc_entity: sensor.battery_soc          # Batterij percentage
+# # battery_power_entity: sensor.battery_power      # Batterij vermogen (+ = laden, - = ontladen)
+# # battery_capacity: 10000                         # Batterij capaciteit in Wh (10 kWh = 10000)
+# 
+# # AUTO OPLADER (optioneel)
+# # car_charger_load: 11000                         # Max laadvermogen in Watt
+# # ev_charger_sensor: sensor.ev_charger_power      # Vermogen van autolader
+
+# ==============================================================================
+# BENODIGDE TEMPLATE SENSOR VOOR SOLAR BAR CARD
+# ==============================================================================
+# Voeg deze toe aan configuration.yaml onder "template:"
+#
+# template:
+#   - sensor:
+#       - name: "Grid Power Calculated"
+#         unique_id: grid_power_calculated
+#         unit_of_measurement: "W"
+#         device_class: power
+#         state_class: measurement
+#         state: >
+#           {% set verbruik = states('sensor.tibber_pulse_JOUW_ADRES_power') | float(0) %}
+#           {% set productie = states('sensor.tibber_pulse_JOUW_ADRES_power_production') | float(0) %}
+#           {{ (verbruik - productie) | round(0) }}
+#         availability: >
+#           {{ states('sensor.tibber_pulse_JOUW_ADRES_power') not in ['unknown', 'unavailable'] }}
+#         attributes:
+#           friendly_name: "Netwerk Vermogen"
+#           # Positief = import van net (stroom afnemen)
+#           # Negatief = export naar net (terugleveren)
+#           flow_direction: >
+#             {% set grid = states('sensor.grid_power_calculated') | float(0) %}
+#             {% if grid > 0 %}Importing{% elif grid < 0 %}Exporting{% else %}Idle{% endif %}
+
+# ==============================================================================
+# VERSIE 3: GEAVANCEERDE SOLAR BAR MET BATTERIJ
+# ==============================================================================
+# Voor gebruikers met batterij systeem:
+
+# type: custom:solar-bar-card
+# inverter_size: 10000
+# show_header: true
+# header_title: Energie Flow
+# show_stats: true
+# show_legend: true
+# use_solcast: false
+# color_palette: classic-solar
+# 
+# # Zonnepanelen productie
+# production_entity: sensor.tibber_pulse_JOUW_ADRES_power_production
+# 
+# # Huis verbruik
+# self_consumption_entity: sensor.tibber_pulse_JOUW_ADRES_power
+# 
+# # Grid (berekend)
+# grid_power_entity: sensor.grid_power_calculated
+# 
+# # Batterij instellingen
+# show_battery_flow: true
+# show_battery_indicator: true
+# battery_flow_animation_speed: 2
+# battery_soc_entity: sensor.battery_soc                    # Vervang met jouw batterij %
+# battery_power_entity: sensor.battery_power                # Vervang met jouw batterij W
+# battery_capacity: 10000                                   # Jouw batterij capaciteit in Wh
+# battery_charge_entity: sensor.battery_power               # Optioneel: laden vermogen
+# battery_discharge_entity: sensor.battery_power            # Optioneel: ontladen vermogen
+# 
+# # EV Charger (optioneel)
+# car_charger_load: 11000
+# ev_charger_sensor: sensor.ev_charger_power
+
+# ==============================================================================
+# INSTALLATIE SOLAR BAR CARD
+# ==============================================================================
+# 1. Ga naar HACS > Frontend
+# 2. Klik op "+ Verken en download repositories"
+# 3. Zoek naar "Solar Bar Card"
+# 4. Klik op "Solar Bar Card" en installeer
+# 5. Herstart Home Assistant
+# 6. Maak de template sensor (zie hierboven) in configuration.yaml
+# 7. Herstart opnieuw
+# 8. Voeg de solar-bar-card toe aan je dashboard
+#
+# GitHub: https://github.com/0xAHA/solar-bar-card
+# ==============================================================================

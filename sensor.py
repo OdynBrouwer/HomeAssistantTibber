@@ -50,6 +50,7 @@ from dataclasses import dataclass
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
+from . import tibber
 from .coordinator import TibberDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,6 +102,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="average_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="power",
@@ -108,6 +110,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="powerProduction",
@@ -115,18 +118,21 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="minPower",
         translation_key="min_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="maxPower",
         translation_key="max_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="accumulatedConsumption",
@@ -134,6 +140,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="accumulatedConsumptionLastHour",
@@ -141,12 +148,14 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="estimatedHourConsumption",
         translation_key="estimated_hour_consumption",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="accumulatedProduction",
@@ -154,6 +163,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="accumulatedProductionLastHour",
@@ -161,6 +171,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="lastMeterConsumption",
@@ -168,6 +179,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="lastMeterProduction",
@@ -175,6 +187,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="voltagePhase1",
@@ -182,6 +195,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key="voltagePhase2",
@@ -189,6 +203,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key="voltagePhase3",
@@ -196,6 +211,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     SensorEntityDescription(
         key="currentL1",
@@ -203,6 +219,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="currentL2",
@@ -210,6 +227,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="currentL3",
@@ -217,6 +235,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
     SensorEntityDescription(
         key="signalStrength",
@@ -225,18 +244,21 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
     ),
     SensorEntityDescription(
         key="accumulatedReward",
         translation_key="accumulated_reward",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="accumulatedCost",
         translation_key="accumulated_cost",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="powerFactor",
@@ -244,6 +266,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER_FACTOR,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
     ),
 )
 
@@ -274,13 +297,15 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="month_cost",
         translation_key="month_cost",
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement_key = "currency"
+        native_unit_of_measurement_key = "currency",
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="peak_hour",
         translation_key="peak_hour",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=4,
     ),
     SensorEntityDescription(
         key="peak_hour_time",
@@ -293,15 +318,9 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=4,
     ),
-    TibberSensorEntityDescription(
-        key="electricity_price_hist",
-        state_class=SensorStateClass.MEASUREMENT,
-        translation_key="electricity_price_hist",
-
-        native_unit_of_measurement_key = "price_unit",
-        icon= ICON
-    ),
+    
     TibberSensorEntityDescription(
         key="electricity_price",
 
@@ -309,14 +328,18 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
 
         native_unit_of_measurement_key = "price_unit",
-        icon= ICON
+        icon= ICON,
+        suggested_display_precision=4,
     ),
     TibberSensorEntityDescription(
         key="electricity_price_excl",
         translation_key="electricity_price_excl",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement_key = "price_unit",
-        icon= ICON
+        icon= ICON,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=4,
     ),
 
     TibberSensorEntityDescription(
@@ -324,7 +347,10 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="electricity_price_excl_base",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement_key = "price_unit",
-        icon= ICON
+        icon= ICON,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=4,
     ),
 
     TibberSensorEntityDescription(
@@ -332,7 +358,10 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="electricity_price_energy_tax_excl",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement_key = "price_unit",
-        icon= ICON
+        icon= ICON,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=4,
     ),
 
     TibberSensorEntityDescription(
@@ -340,7 +369,10 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="electricity_price_energy_tax_incl",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement_key = "price_unit",
-        icon= ICON
+        icon= ICON,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=4,
     ),
     
     TibberSensorEntityDescription(
@@ -349,7 +381,10 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
 
         native_unit_of_measurement_key = "price_unit",
-        icon= ICON
+        icon= ICON,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=4,
     ),
 
     TibberSensorEntityDescription(
@@ -357,7 +392,10 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="electricity_price_surcharge_incl",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement_key = "price_unit",
-        icon= ICON
+        icon= ICON,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=4,
     ),
 
 
@@ -366,14 +404,19 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="electricity_price_calc",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement_key = "price_unit",
-        icon= ICON
+        icon= ICON,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        suggested_display_precision=4,
     ),
 
 
     SensorEntityDescription(
         key="tax_rate",
         translation_key="tax_rate",
-        icon= ICON
+        icon= ICON,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False
     ),
     
     
@@ -381,7 +424,9 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         key="electricity_price_excl_cent",
         translation_key="electricity_price_excl_cent",
         device_class=SensorDeviceClass.MONETARY,
-        icon= ICON
+        icon= ICON,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False
     ),
     SensorEntityDescription(
         key="last_price_update",
@@ -585,7 +630,95 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"])
         if self.entity_description.key == "electricity_price":
             _LOGGER.debug('Update electricity_price atributes')
 
-            self._attr_extra_state_attributes["price_info"] = self._tibber_home.price_info
+            # Build a compact summary of price info to avoid storing huge attributes
+            # Full `price_info` can be very large (quarter-hour entries) which causes
+            # recorder to skip attribute storage and DB warnings. Provide a small
+            # summary: source, current price and the next few upcoming entries.
+            summary: dict[str, Any] = {}
+            summary["source"] = getattr(self._tibber_home, "price_source", "unknown")
+
+            # include currency at top level if available (stable for recorder)
+            currency = getattr(self._tibber_home, "currency", None) or None
+            summary["currency"] = currency
+
+            # Build 'current' entry: prefer quarter-hour entry from _price_info,
+            # fallback to _current_price_info which may come from the separate query.
+            current: dict[str, Any] | None = None
+            try:
+                now = dt_util.now().astimezone(self._tibber_home._tibber_control.time_zone)
+                # look for matching quarter-hour entry
+                for startsAt, entry in (getattr(self._tibber_home, "_price_info", {}) or {}).items():
+                    ts = entry.get("timestamp")
+                    if not isinstance(ts, datetime.datetime):
+                        continue
+                    if ts <= now < (ts + datetime.timedelta(minutes=15)):
+                        # found matching quarter-hour entry
+                        current = {
+                            "startsAt": startsAt,
+                            "total": entry.get("total"),  # The total price (energy + taxes)
+                            "energy": entry.get("energy"),  # Nord Pool spot price
+                            # The tax part of the price (guarantee of origin certificate, 
+                            # energy tax (Sweden only) and VAT). For NL: includes VAT on spot + fixed costs.
+                            "tax": entry.get("tax"),
+                            "level": self._tibber_home.price_level.get(startsAt),
+                        }
+                        break
+
+                # fallback to _current_price_info
+                if current is None:
+                    cur = getattr(self._tibber_home, "_current_price_info", None)
+                    if cur and isinstance(cur, dict):
+                        starts = cur.get("startsAt")
+                        level = None
+                        if isinstance(starts, str):
+                            level = self._tibber_home.price_level.get(starts)
+                        current = {
+                            "startsAt": starts,
+                            "total": cur.get("total"),  # The total price (energy + taxes)
+                            "energy": cur.get("energy"),  # Nord Pool spot price
+                            # The tax part (guarantee of origin, energy tax (Sweden only), VAT)
+                            "tax": cur.get("tax"),
+                            "level": cur.get("level") or level,
+                        }
+            except Exception:
+                current = None
+            summary["current"] = current
+
+            # collect next up to 6 upcoming quarter entries from _price_info
+            upcoming: list[dict[str, Any]] = []
+            try:
+                now = dt_util.now().astimezone(self._tibber_home._tibber_control.time_zone)
+                entries: list[tuple[datetime.datetime, str]] = []
+                for startsAt, entry in (getattr(self._tibber_home, "_price_info", {}) or {}).items():
+                    ts = entry.get("timestamp")
+                    if not isinstance(ts, datetime.datetime):
+                        continue
+                    if ts >= now:
+                        entries.append((ts, startsAt))
+                entries.sort()
+                for ts, startsAt in entries[:6]:
+                    entry = self._tibber_home._price_info.get(startsAt, {})
+                    upcoming.append(
+                        {
+                            "startsAt": startsAt,
+                            "total": entry.get("total"),  # The total price (energy + taxes)
+                            "energy": entry.get("energy"),  # Nord Pool spot price
+                            # The tax part (guarantee of origin, energy tax (Sweden only), VAT)
+                            "tax": entry.get("tax"),
+                            "level": self._tibber_home.price_level.get(startsAt),
+                        }
+                    )
+            except Exception:
+                upcoming = []
+
+            summary["upcoming"] = upcoming
+
+            # attach compact summary (not the full price_info dict)
+            # merge into existing attributes dict (avoid item assignment typing issues)
+            self._attr_extra_state_attributes = {
+                **(self._attr_extra_state_attributes or {}),
+                "price_info_summary": summary,
+            }
         
         self.async_write_ha_state()
 
@@ -609,7 +742,40 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
         self._attr_unique_id = f"{self._tibber_home.home_id}_rt_{description.key}"
 
         if description.key in ("accumulatedCost", "accumulatedReward"):
-            self._attr_native_unit_of_measurement = tibber_home.currency
+            # RT sensor: prefer currency from live measurement data first,
+            # then try getting it from home info, finally fall back to 'EUR'.
+            # This ensures a stable unit for recorder/statistics.
+            if live_measurement := coordinator.get_live_measurement():
+                currency = live_measurement.get("currency")
+                if currency:
+                    self._attr_native_unit_of_measurement = currency
+                    _LOGGER.debug(
+                        "RT sensor %s using currency from live measurement: %s",
+                        description.key,
+                        currency,
+                    )
+                    return
+
+            # Try getting from home info (may be None)
+            currency = tibber_home.currency
+            if currency:
+                self._attr_native_unit_of_measurement = currency
+                _LOGGER.debug(
+                    "RT sensor %s using currency from home info: %s",
+                    description.key,
+                    currency,
+                )
+                return
+
+            # Fallback to EUR to keep unit stable for recorder
+            self._attr_native_unit_of_measurement = "EUR"
+            _LOGGER.debug(
+                "RT sensor %s using fallback currency: EUR",
+                description.key,
+            )
+            # when Tibber does not provide a currency to avoid unit=None which
+            # suppresses long term statistics.
+            self._attr_native_unit_of_measurement = tibber_home.currency or "EUR"
 
     @property
     def available(self) -> bool:

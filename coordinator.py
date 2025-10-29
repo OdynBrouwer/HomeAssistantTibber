@@ -7,6 +7,7 @@ import logging
 from typing import cast
 
 import tibber
+from .tibber import RetryableHttpExceptionError, FatalHttpExceptionError
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData

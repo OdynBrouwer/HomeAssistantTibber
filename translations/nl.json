@@ -16,6 +16,157 @@
                 "description": "Voer uw toegangstoken in van {url}"
             }
         }
-        
+    },
+    "entity": {
+        "sensor": {
+            "electricity_price": {
+                "name": "Stroomprijs totaal",
+                "state": "Totale verbruiksprijs per kWh van Tibber API (spotprijs + alle kosten incl. BTW). Gebruik dit voor verbruiksbeslissingen."
+            },
+            "electricity_price_excl": {
+                "name": "Prijs excl. BTW (berekend)",
+                "state": "Prijs voor BTW: {0}/kWh"
+            },
+            "electricity_price_excl_cent": {
+                "name": "Prijs excl. BTW in centen (berekend)",
+                "state": "Prijs voor BTW: {0} cent/kWh"
+            },
+            "electricity_price_calc": {
+                "name": "Totaalprijs (berekend)",
+                "state": "Berekend: {0}/kWh = (energie + toeslag + belasting) × BTW"
+            },
+            "electricity_price_excl_base": {
+                "name": "Basis energieprijs zonder toeslag",
+                "state": "Nord Pool spotprijs van Tibber API (energy veld). Gebruik dit voor terugleveringsbeslissingen (kan negatief zijn)."
+            },
+            "electricity_price_surcharge_excl": {
+                "name": "Toeslag excl. BTW (geconfigureerd)",
+                "state": "Vaste toeslag: {0}/kWh (voor BTW)"
+            },
+            "electricity_price_surcharge_incl": {
+                "name": "Toeslag incl. BTW (berekend)",
+                "state": "Vaste toeslag: {0}/kWh (met BTW)"
+            },
+            "electricity_price_energy_tax_excl": {
+                "name": "Energiebelasting excl. BTW (geconfigureerd)",
+                "state": "Belasting per kWh: {0} (voor BTW)"
+            },
+            "electricity_price_energy_tax_incl": {
+                "name": "Energiebelasting incl. BTW (berekend)",
+                "state": "Belasting per kWh: {0} (met BTW)"
+            },
+            "electricity_price_hist": {
+                "name": "Basis energieprijs (historisch)",
+                "state": "Historische basisprijs: {0}/kWh"
+            },
+            "hour_cheapest_top": {
+                "name": "Prijsrang in dag (0-1)",
+                "state": "{0} in 24u bereik (0=goedkoopst, 1=duurst)"
+            },
+            "hour_cheapest_top_after_0000": {
+                "name": "Nacht prijsrang (0-1)",
+                "state": "{0} vs nachturen 00:00-08:00"
+            },
+            "hour_cheapest_top_after_0800": {
+                "name": "Dag prijsrang (0-1)",
+                "state": "{0} vs daguren 08:00-18:00"
+            },
+            "hour_cheapest_top_after_1800": {
+                "name": "Avond prijsrang (0-1)",
+                "state": "{0} vs avonduren 18:00-00:00"
+            },
+            "tax_rate": {
+                "name": "BTW tarief % (geconfigureerd)",
+                "state": "BTW percentage: {0}%"
+            },
+            "tax_per_kwh": {
+                "name": "Belasting per kWh (geconfigureerd)",
+                "state": "Extra belasting: {0}/kWh"
+            },
+            "accumulated_consumption": {
+                "name": "Totaal verbruik sinds installatie",
+                "state": "{0} kWh totaal"
+            },
+            "accumulated_consumption_last_hour": {
+                "name": "Verbruik dit uur",
+                "state": "{0} kWh dit uur"
+            },
+            "accumulated_production": {
+                "name": "Totale productie sinds installatie",
+                "state": "{0} kWh opgewekt"
+            },
+            "accumulated_production_last_hour": {
+                "name": "Productie dit uur",
+                "state": "{0} kWh opgewekt dit uur"
+            },
+            "accumulated_cost": {
+                "name": "Totale kosten",
+                "state": "{0} totale kosten"
+            },
+            "accumulated_reward": {
+                "name": "Totale opbrengst",
+                "state": "{0} totale opbrengst"
+            },
+            "last_meter_consumption": {
+                "name": "Laatste meterstand verbruik"
+            },
+            "last_meter_production": {
+                "name": "Laatste meterstand productie"
+            },
+            "month_cons": {
+                "name": "Maandelijks netto verbruik"
+            },
+            "month_cost": {
+                "name": "Maandelijkse kosten"
+            },
+            "peak_hour": {
+                "name": "Maandelijks piekuur verbruik"
+            },
+            "peak_hour_time": {
+                "name": "Tijdstip van max. uurverbruik"
+            },
+            "last_price_update": {
+                "name": "Laatste prijsupdate"
+            },
+            "power": {
+                "name": "Vermogen"
+            },
+            "power_production": {
+                "name": "Opgewekt vermogen"
+            },
+            "power_factor": {
+                "name": "Arbeidsfactor"
+            },
+            "average_power": {
+                "name": "Gemiddeld vermogen"
+            },
+            "min_power": {
+                "name": "Min vermogen"
+            },
+            "max_power": {
+                "name": "Max vermogen"
+            },
+            "voltage_phase1": {
+                "name": "Spanning fase 1"
+            },
+            "voltage_phase2": {
+                "name": "Spanning fase 2"
+            },
+            "voltage_phase3": {
+                "name": "Spanning fase 3"
+            },
+            "current_l1": {
+                "name": "Stroom L1"
+            },
+            "current_l2": {
+                "name": "Stroom L2"
+            },
+            "current_l3": {
+                "name": "Stroom L3"
+            },
+            "signal_strength": {
+                "name": "Signaalsterkte"
+            }
+        }
     }
 }

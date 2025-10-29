@@ -49,63 +49,76 @@
     "entity": {
         "sensor": {
             "accumulated_consumption": {
-                "name": "Accumulated consumption"
+                "name": "Total consumption since install",
+                "state": "{0} kWh total"
             },
             "accumulated_consumption_last_hour": {
-                "name": "Accumulated consumption current hour"
+                "name": "Current hour consumption",
+                "state": "{0} kWh this hour"
             },
             "accumulated_cost": {
-                "name": "Accumulated cost"
+                "name": "Total cost (historical prices)",
+                "state": "{0} total cost"
             },
             "accumulated_production": {
-                "name": "Accumulated production"
+                "name": "Total production since install",
+                "state": "{0} kWh generated"
             },
             "accumulated_production_last_hour": {
-                "name": "Accumulated production current hour"
+                "name": "Current hour production",
+                "state": "{0} kWh generated this hour"
             },
             "electricity_price_excl_base": {
-                "name": "Electricity base price without surcharge"
+                "name": "Base energy price without surcharge",
+                "state": "Nord Pool spot price from Tibber API (energy field). Use this for feed-in decisions (can be negative)."
               },
 
               "electricity_price_energy_tax_excl": {
-
-                "name": "Electricity energy tax excl VAT"
+                "name": "Energy tax excl VAT (configured)",
+                "state": "Tax per kWh: {0} (before VAT)"
               },
 
               "electricity_price_calc": {
-                "name": "Electricity price total incl vat (Calculated)"
+                "name": "Total price (calculated)",
+                "state": "Calculated: {0}/kWh = (energy + surcharge + tax) × tax rate"
               },
-
 
               "hour_cheapest_top": {
-                "name": "Hour in is the top X cheapest hours today"
+                "name": "Price rank in day (0-1)",
+                "state": "{0} in 24h range (0=cheapest, 1=most expensive)"
               },
               "hour_cheapest_top_after_0000": {
-                "name": "Hour in is the top X cheapest hours today between 0:00 and 8:00"
+                "name": "Night price rank (0-1)",
+                "state": "{0} vs night hours 00:00-08:00"
               },
               "hour_cheapest_top_after_0800": {
-                "name": "Hour in is the top X cheapest hours today between 8:00 and 18:00"
+                "name": "Day price rank (0-1)",
+                "state": "{0} vs day hours 08:00-18:00"
               },
               "hour_cheapest_top_after_1800": {
-                "name": "Hour in is the top X cheapest hours today between 18:00 and 0:00"
+                "name": "Evening price rank (0-1)",
+                "state": "{0} vs evening hours 18:00-00:00"
               },
               
-        
               "electricity_price_energy_tax_incl": {
-        
-                "name": "Electricity energy tax incl VAT"
+                "name": "Energy tax incl VAT (calculated)",
+                "state": "Tax per kWh: {0} (with VAT)"
               },
 
-            "tax_rate": {
-                "name": "Tax rate %"
+              "tax_rate": {
+                "name": "Tax rate % (configured)",
+                "state": "VAT rate: {0}%"
               },
+
               "tax_per_kwh": {
-                "name": "Tax fee per kWh"
+                "name": "Tax per kWh (configured)",
+                "state": "Additional tax: {0}/kWh"
               },
 
-            "electricity_price_hist": {
-                "name": "Electricity price excl history"
-            },
+              "electricity_price_hist": {
+                "name": "Base energy price (historical)",
+                "state": "Historical base price: {0}/kWh"
+              },
             "accumulated_reward": {
                 "name": "Accumulated reward"
             },
@@ -122,20 +135,25 @@
                 "name": "Current L3"
             },
             "electricity_price": {
-                "name": "Electricity price total incl vat"
+                "name": "Electricity price total",
+                "state": "Total consumption price per kWh from Tibber API (spot + all costs incl. VAT). Use this for consumption decisions."
             },
             "electricity_price_excl": {
-              "name": "Electricity price excl energy tax incl vat"
+                "name": "Price excl tax (calculated)",
+                "state": "Price before tax: {0}/kWh"
             },
             "electricity_price_excl_cent": {
-                "name": "Electricity price excl tax in cents"
-              },
-              "electricity_price_surcharge_excl": {
-                "name": "Electricity price Tibber surcharge excl tax"
-              },
-              "electricity_price_surcharge_incl": {
-                "name": "Electricity price Tibber surcharge incl tax"
-              },
+                "name": "Price excl tax in cents (calculated)",
+                "state": "Price before tax: {0} cent/kWh"
+            },
+            "electricity_price_surcharge_excl": {
+                "name": "Surcharge excl VAT (configured)",
+                "state": "Fixed surcharge: {0}/kWh (before VAT)"
+            },
+            "electricity_price_surcharge_incl": {
+                "name": "Surcharge incl VAT (calculated)", 
+                "state": "Fixed surcharge: {0}/kWh (with VAT)"
+            },
         
             "estimated_hour_consumption": {
                 "name": "Estimated consumption current hour"

@@ -2,58 +2,66 @@
   "entity": {
     "sensor": {
       "electricity_price": {
-        "name": "Electricity price total incl vat (TIbber)"
+        "name": "Electricity price total",
+        "state": "Total consumption price per kWh from Tibber API (spot + all costs incl. VAT). Use this for consumption decisions."
       },
       "electricity_price_excl": {
-        "name": "Electricity price excl energy tax incl vat"
+        "name": "Electricity price excl tax (calculated)",
+        "state": "Price with surcharge but excluding tax, derived from base price"
       },      
       "electricity_price_excl_cent": {
-        "name": "Electricity price excl energy tax in cents"
+        "name": "Electricity price excl tax in cents (calculated)",
+        "state": "Same as electricity_price_excl but converted to cents"
       },
 
       "electricity_price_calc": {
-        "name": "Electricity price total incl vat (Calculated)"
+        "name": "Electricity price total (calculated)",
+        "state": "Total price calculated as (energy + surcharge + tax) * tax_rate"
       },
 
       "hour_cheapest_top": {
-        "name": "Hour in is the top X cheapest hours today"
+        "name": "Price rank in day (0-1)",
+        "state": "Current hour's price rank from 0 (cheapest) to 1 (most expensive) for all hours today"
       },
       "hour_cheapest_top_after_0000": {
-        "name": "Hour in is the top X cheapest hours today between 0:00 and 8:00"
+        "name": "Night price rank (0-1)",
+        "state": "Price rank 0-1 comparing current hour to 00:00-08:00 period"
       },
       "hour_cheapest_top_after_0800": {
-        "name": "Hour in is the top X cheapest hours today between 8:00 and 18:00"
+        "name": "Day price rank (0-1)",
+        "state": "Price rank 0-1 comparing current hour to 08:00-18:00 period"
       },
       "hour_cheapest_top_after_1800": {
-        "name": "Hour in is the top X cheapest hours today between 18:00 and 0:00"
+        "name": "Evening price rank (0-1)", 
+        "state": "Price rank 0-1 comparing current hour to 18:00-00:00 period"
       },
-
-      
-
 
       "electricity_price_surcharge_excl": {
-        "name": "Electricity price Tibber surcharge excl VAT"
+        "name": "Surcharge excl VAT (configured)",
+        "state": "Fixed surcharge configured in integration options, excluding VAT"
       },
       "electricity_price_surcharge_incl": {
-        "name": "Electricity price Tibber surcharge incl VAT"
+        "name": "Surcharge incl VAT (calculated)",
+        "state": "Fixed surcharge with VAT applied"
       },
       "electricity_price_hist": {
-        "name": "Electricity price excl history"
+        "name": "Base energy price (historical)",
+        "state": "Base price excluding all surcharges and tax"
       },
 
       "electricity_price_excl_base": {
-        "name": "Electricity base price without surcharge"
+        "name": "Base energy price without surcharge",
+        "state": "Nord Pool spot price from Tibber API (energy field). Use this for feed-in decisions (can be negative)."
       },
 
       "electricity_price_energy_tax_excl": {
-
-        "name": "Electricity energy tax excl VAT"
+        "name": "Energy tax excl VAT (configured)",
+        "state": "Fixed energy tax configured in integration options"
       },
-      
 
       "electricity_price_energy_tax_incl": {
-
-        "name": "Electricity energy tax incl VAT"
+        "name": "Energy tax incl VAT (calculated)",
+        "state": "Energy tax with VAT applied"
       },
       
       

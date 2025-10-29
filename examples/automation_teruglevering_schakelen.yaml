@@ -1,0 +1,180 @@
+# Automatisering: Teruglevering Automatisch Aan/Uit Schakelen
+#
+# Deze automatisering schakelt je omvormer automatisch uit wanneer de teruglevering-
+# prijs negatief wordt, en weer aan wanneer de prijs positief wordt.
+#
+# INSTALLATIE:
+# Kopieer deze code naar je automations.yaml
+#
+# BELANGRIJK:
+# Vervang "switch.omvormer_export" met jouw eigen switch!
+# Zie onderaan voor voorbeelden van verschillende merken.
+
+alias: "Teruglevering automatisch aan/uit"
+description: "Schakelt omvormer uit bij negatieve terugleverprijs, aan bij positieve en geeft overzichtelijke melding"
+
+trigger:
+  - platform: state
+    entity_id: sensor.teruglevering_netto_tarief
+    # Trigger bij elke wijziging van de netto tarief sensor
+
+condition: []
+  # Geen voorwaarden, we controleren alles in de action
+
+action:
+  - choose:
+      # ==================================================================
+      # SCENARIO 1: Prijs is negatief geworden → Omvormer UITSCHAKELEN
+      # ==================================================================
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger.to_state.state | float(0) < 0
+                 and trigger.from_state.state | float(0) >= 0 }}
+            # Controleert:
+            # - Nieuwe prijs < 0 (negatief)
+            # - Oude prijs >= 0 (was positief)
+            # Dus: overgang van positief naar negatief
+        
+        sequence:
+          # Stap 1: Schakel omvormer export UIT
+          - service: switch.turn_off
+            target:
+              entity_id: switch.omvormer_export  # ← PAS DIT AAN!
+            data: {}
+          
+          # Stap 2: Stuur notificatie
+          - service: persistent_notification.create
+            data:
+              title: "⚠️ Teruglevering gestopt"
+              message: >
+                🕒 Tijd: {{ now().strftime('%d-%m-%Y %H:%M:%S') }}
+                
+                💰 Netto prijs: {{ states('sensor.teruglevering_netto_tarief') }} €/kWh
+                📉 Spotprijs: {{ state_attr('sensor.teruglevering_netto_tarief', 'spotprijs') }} €/kWh
+                
+                ⚠️ Reden: De terugleverprijs is negatief geworden.
+                Je zou GELD KWIJT RAKEN als je nu terugleverd!
+                
+                ✅ Actie: Teruglevering tijdelijk uitgeschakeld.
+                💡 Gebruik je zonnestroom nu lokaal (batterij, boiler, etc.)
+              notification_id: "teruglevering_status"
+      
+      # ==================================================================
+      # SCENARIO 2: Prijs is positief geworden → Omvormer INSCHAKELEN
+      # ==================================================================
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ trigger.to_state.state | float(0) >= 0
+                 and trigger.from_state.state | float(0) < 0 }}
+            # Controleert:
+            # - Nieuwe prijs >= 0 (positief of nul)
+            # - Oude prijs < 0 (was negatief)
+            # Dus: overgang van negatief naar positief
+        
+        sequence:
+          # Stap 1: Schakel omvormer export AAN
+          - service: switch.turn_on
+            target:
+              entity_id: switch.omvormer_export  # ← PAS DIT AAN!
+            data: {}
+          
+          # Stap 2: Stuur notificatie
+          - service: persistent_notification.create
+            data:
+              title: "☀️ Teruglevering gestart"
+              message: >
+                🕒 Tijd: {{ now().strftime('%d-%m-%Y %H:%M:%S') }}
+                
+                💰 Netto prijs: {{ states('sensor.teruglevering_netto_tarief') }} €/kWh
+                📈 Spotprijs: {{ state_attr('sensor.teruglevering_netto_tarief', 'spotprijs') }} €/kWh
+                
+                ✅ Reden: De terugleverprijs is positief geworden.
+                Je VERDIENT weer geld met terugleveren!
+                
+                ☀️ Actie: Teruglevering ingeschakeld.
+                💶 Je krijgt nu {{ states('sensor.teruglevering_netto_tarief') }} per kWh
+              notification_id: "teruglevering_status"
+
+mode: single
+# "single" = als de automatisering al loopt, negeer nieuwe triggers
+# Dit voorkomt dubbele schakelingen
+
+# ==============================================================================
+# VEELGEBRUIKTE SWITCH ENTITIES PER MERK
+# ==============================================================================
+#
+# Vervang "switch.omvormer_export" hierboven met één van deze:
+#
+# GROWATT:
+#   switch.growatt_export_control
+#   of: switch.growatt_export_limit_switch
+#
+# SOLAREDGE:
+#   switch.solaredge_export_limit
+#   of: switch.solaredge_i1_export_control
+#
+# HUAWEI:
+#   switch.huawei_grid_export
+#   of: switch.huawei_active_power_control_mode
+#
+# ENPHASE:
+#   switch.enphase_grid_profile
+#   of: switch.envoy_grid_relay
+#
+# SOLIS / GINLONG / OMNIK:
+#   switch.solis_export_power_management
+#   of: switch.solis_energy_storage_mode
+#
+# GOODWE:
+#   switch.goodwe_export_limit
+#   of: switch.goodwe_inverter_on_off
+#
+# FRONIUS:
+#   switch.fronius_export_limit
+#   of: number.fronius_maximum_feed_in (dan moet je deze op 0 zetten)
+#
+# SMA:
+#   switch.sma_grid_relay
+#   of: switch.sma_active_power_limitation
+#
+# WEET JE HET NIET?
+# Ga naar Developer Tools > States en zoek naar "export" of "grid"
+# bij je omvormer integratie.
+#
+# ==============================================================================
+# EXTRA OPTIES
+# ==============================================================================
+#
+# Optie 1: Ook notificatie naar je telefoon sturen
+# Voeg dit toe aan elke "sequence" na de persistent_notification:
+#
+#   - service: notify.mobile_app_jouw_telefoon  # ← Pas naam aan!
+#     data:
+#       title: "{{ title van hierboven }}"
+#       message: "{{ message van hierboven }}"
+#
+# Optie 2: Batterij automatisch laden bij negatieve prijzen
+# Voeg dit toe aan SCENARIO 1 sequence na turn_off:
+#
+#   - service: switch.turn_on
+#     target:
+#       entity_id: switch.battery_charging
+#
+# Optie 3: Boiler verwarmen bij negatieve prijzen
+# Voeg dit toe aan SCENARIO 1 sequence na turn_off:
+#
+#   - service: switch.turn_on
+#     target:
+#       entity_id: switch.boiler_smart_heating
+#
+# Optie 3: Log naar logboek voor historie
+# Voeg dit toe aan elke "sequence":
+#
+#   - service: logbook.log
+#     data:
+#       name: "Teruglevering"
+#       message: "Omvormer {{ 'uitgeschakeld' if trigger.to_state.state | float < 0 else 'ingeschakeld' }} bij {{ states('sensor.teruglevering_netto_tarief') }} €/kWh"
+#
+# ==============================================================================

@@ -67,7 +67,7 @@ class TibberRT:
 
     async def connect(self) -> None:
         """Start subscription manager."""
-        self._create_sub_manager()
+        await self._create_sub_manager()
 
         assert self.sub_manager is not None
 
@@ -80,16 +80,35 @@ class TibberRT:
                 self._watchdog_runner = asyncio.create_task(self._watchdog())
             await self.sub_manager.connect_async()  # type: ignore
 
-    def _create_sub_manager(self) -> None:
+    async def _create_sub_manager(self) -> None:
+        """Create subscription manager.
+
+        This does potentially blocking SSL context setup off the event loop
+        using asyncio.to_thread and then constructs the Client with a
+        TibberWebsocketsTransport that receives the prepared SSL context.
+        """
         if self.sub_endpoint is None:
             raise SubscriptionEndpointMissingError("Subscription endpoint not initialized")
         if self.sub_manager is not None:
             return
+
+        # Create SSL context off the event loop to avoid blocking the loop
+        def _create_ssl_context():
+            import ssl
+
+            ctx = ssl.create_default_context()
+            # load_default_certs may be blocking depending on platform
+            ctx.load_default_certs()
+            return ctx
+
+        ssl_ctx = await asyncio.to_thread(_create_ssl_context)
+
         self.sub_manager = Client(
             transport=TibberWebsocketsTransport(
                 self.sub_endpoint,
                 self._access_token,
                 self._user_agent,
+                ssl=ssl_ctx,
             ),
         )
 
@@ -132,36 +151,37 @@ class TibberRT:
                         continue
 
             self.sub_manager.transport.reconnect_at = dt.datetime.now(tz=dt.UTC) + dt.timedelta(seconds=self._timeout)
-            _LOGGER.error(
-                "Watchdog: Connection is down, %s",
-                self.sub_manager.transport.reconnect_at,
+            _LOGGER.warning(
+                "Watchdog: WebSocket verbinding verbroken, herverbinden over %s seconden",
+                self._timeout,
             )
 
             try:
                 if hasattr(self.sub_manager, "session"):
                     await self.sub_manager.close_async()  # type: ignore
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error in watchdog close")
+                _LOGGER.debug("Error in watchdog close (verwacht na verbindingsverlies)")
 
             if not self._watchdog_running:
                 _LOGGER.debug("Watchdog: Stopping")
                 return
 
-            self._create_sub_manager()
+            await self._create_sub_manager()
             try:
                 await self.sub_manager.connect_async()  # type: ignore
                 await self._resubscribe_homes()
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:  # pylint: disable=broad-except
                 delay_seconds = min(
                     random.SystemRandom().randint(1, 60) + _retry_count**2,
                     20 * 60,
                 )
                 _retry_count += 1
-                _LOGGER.error(
-                    "Error in watchdog connect, retrying in %s seconds, %s",
-                    delay_seconds,
+                _LOGGER.warning(
+                    "Herverbinden met Tibber mislukt (poging %s), nieuwe poging over %s seconden. Reden: %s",
                     _retry_count,
-                    exc_info=_retry_count > 1,
+                    delay_seconds,
+                    str(err),
+                    exc_info=_retry_count > 3,  # Alleen volledige stacktrace na 3 pogingen
                 )
                 await asyncio.sleep(delay_seconds)
             else:

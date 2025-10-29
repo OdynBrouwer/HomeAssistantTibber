@@ -13,13 +13,18 @@ _LOGGER = logging.getLogger(__name__)
 class TibberWebsocketsTransport(WebsocketsTransport):
     """Tibber websockets transport."""
 
-    def __init__(self, url: str, access_token: str, user_agent: str) -> None:
-        """Initialize TibberWebsocketsTransport."""
+    def __init__(self, url: str, access_token: str, user_agent: str, ssl=None) -> None:
+        """Initialize TibberWebsocketsTransport.
+
+        Accept an optional pre-created SSL context (ssl) so that any blocking
+        SSL context setup can be done off the event loop and passed in.
+        """
         super().__init__(
             url=url,
             init_payload={"token": access_token},
             headers={"User-Agent": user_agent},
             ping_interval=30,
+            ssl=ssl,
         )
         self._user_agent: str = user_agent
         self._timeout: int = 90

@@ -1,0 +1,103 @@
+# VEROUDERD - GEBRUIK AUTOMATION_TERUGLEVERING_SCHAKELEN.YAML
+#
+# Dit bestand is verouderd en niet meer de aanbevolen manier!
+#
+# Gebruik in plaats daarvan:
+# - automation_teruglevering_schakelen.yaml (simpel, automatisch, met notificaties)
+# - template_teruglevering_netto_tarief.yaml (berekent netto tarief correct)
+#
+# Waarom is dit verouderd?
+# - Gebruikt verkeerde sensor (electricity_price_excl in plaats van spotprijs)
+# - Geen rekening met saldering regels
+# - Geen ondersteuning voor negatieve prijzen
+# - Te complex voor de meeste gebruikers
+#
+# ==============================================================================
+
+# Dit bestand wordt bewaard voor backwards compatibility.
+# Zie de nieuwe voorbeelden in de /examples map voor betere implementaties!
+
+automation:
+  - alias: "Solar Feed-in Control Based on Price (VEROUDERD)"
+    description: "VEROUDERD - Gebruik automation_teruglevering_schakelen.yaml"
+    
+    trigger:
+      - platform: state
+        entity_id: sensor.electricity_price_excl
+      - platform: time_pattern
+        minutes: "/1"
+        
+    # Variables for price thresholds
+    variables:
+      # You can adjust these thresholds based on your situation
+      min_profitable_price: 0.15  # Minimum price to consider profitable feed-in
+      very_profitable_price: 0.25 # Price above which feed-in is highly desirable
+      
+    condition:
+      # Only run during daylight hours when solar production is possible
+      - condition: sun
+        after: sunrise
+        before: sunset
+      # And when we have actual solar production
+      - condition: numeric_state
+        entity_id: sensor.power_production
+        above: 100  # Minimum 100W production to consider feed-in
+        
+    action:
+      # Decision logic for feed-in control
+      - choose:
+          # Case 1: Price is very attractive - definitely feed in
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.electricity_price_excl
+                above: "{{ very_profitable_price }}"
+            sequence:
+              - service: switch.turn_on
+                target:
+                  entity_id: switch.solar_panel
+              - service: notify.mobile_app
+                data:
+                  title: "Solar Feed-in Enabled"
+                  message: >
+                    High energy price ({{ states('sensor.electricity_price_excl') }}), 
+                    enabling grid feed-in.
+                    
+          # Case 2: Price is below minimum threshold - store/use locally
+          - conditions:
+              - condition: numeric_state
+                entity_id: sensor.electricity_price_excl
+                below: "{{ min_profitable_price }}"
+            sequence:
+              - service: switch.turn_off
+                target:
+                  entity_id: switch.solar_panel
+              - service: notify.mobile_app
+                data:
+                  title: "Solar Feed-in Disabled"
+                  message: >
+                    Low energy price ({{ states('sensor.electricity_price_excl') }}), 
+                    storing energy locally.
+                    
+        # Default case (price between thresholds):
+        default:
+          # If price is moderate, maintain current state to avoid frequent switching
+          - service: persistent_notification.create
+            data:
+              title: "Solar Feed-in Status"
+              message: >
+                Current price ({{ states('sensor.electricity_price_excl') }}) 
+                is in normal range, maintaining current mode.
+
+  # Additional helper automation to log daily statistics
+  - alias: "Log Daily Solar Feed-in Statistics"
+    trigger:
+      - platform: time
+        at: "23:59:59"
+    action:
+      - service: system_log.write
+        data:
+          message: >
+            Daily solar statistics:
+            Average price: {{ states('sensor.electricity_price_excl') }}
+            Total production: {{ states('sensor.accumulated_production') }}
+            Feed-in revenue: {{ states('sensor.accumulated_reward') }}

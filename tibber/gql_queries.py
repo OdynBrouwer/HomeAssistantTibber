@@ -88,13 +88,14 @@ PRICE_INFO = """
           viewer {
             home(id: "%s") {
               currentSubscription {
-                priceInfo {
+                priceInfo(resolution: QUARTER_HOURLY) {
                   current {
                     energy
                     tax
                     total
                     startsAt
                     level
+                    currency
                   }
                   today {
                     total
@@ -128,7 +129,7 @@ UPDATE_CURRENT_PRICE = """
           viewer {
             home(id: "%s") {
               currentSubscription {
-                priceInfo {
+                priceInfo(resolution: QUARTER_HOURLY) {
                   current {
                     energy
                     tax
@@ -203,7 +204,7 @@ UPDATE_INFO_PRICE = """
           viewer {
             home(id: "%s") {
               currentSubscription {
-                priceInfo {
+                priceInfo(resolution: QUARTER_HOURLY) {
                   current {
                     energy
                     tax
@@ -269,13 +270,7 @@ UPDATE_INFO_PRICE = """
                 validTo
                 statusReason
               }
-              currentSubscription {
-                priceInfo {
-                  current {
-                    currency
-                  }
-                }
-              }
+              # currency is included in the priceInfo(resolution: QUARTER_HOURLY).current selection above
             }
           }
         }
