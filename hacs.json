@@ -1,5 +1,6 @@
 {
   "name": "Tibber Advanced",
+  "content_in_root": true,
   "render_readme": true,
   "country": ["NL", "NO", "SE", "DE"],
   "homeassistant": "2024.10.0"
