@@ -1,10 +1,11 @@
 {
   "domain": "tibber_adv",
   "name": "Tibber Advanced",
-  "codeowners": ["@OdynBrouwer","@danielhiversen"],
+  "codeowners": ["@OdynBrouwer"],
   "config_flow": true,
   "dependencies": ["recorder"],
-  "documentation": "https://www.home-assistant.io/integrations/tibber",
+  "documentation": "https://github.com/OdynBrouwer/HomeAssistantTibber",
+  "issue_tracker": "https://github.com/OdynBrouwer/HomeAssistantTibber/issues",
   "iot_class": "cloud_polling",
   "loggers": ["tibber_adv", "gql.transport.websockets"],
   "quality_scale": "silver",
