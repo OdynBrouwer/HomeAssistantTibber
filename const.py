@@ -10,6 +10,6 @@ CONF_TAX_RATE = "tax_rate"
 CONF_TAX_PER_KWH = "tax_per_kwh"
 
 # Default values
-DEFAULT_SURCHARGE_PRICE_INCL = 0.1228  # Tibber surcharge incl BTW
+DEFAULT_SURCHARGE_PRICE_INCL = 0.0123  # Tibber surcharge incl BTW (ongeveer 1.23 cent)
 DEFAULT_TAX_RATE = 21.0  # BTW percentage
 DEFAULT_TAX_PER_KWH = 0.10154  # Energiebelasting per kWh

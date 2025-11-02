@@ -441,17 +441,26 @@ class TibberHome:
     
     @property
     def electricity_price_calc(self) -> float | None:
-        """Get calculated total price including all components."""
+        """Get calculated total price including all components (for debugging).
+        
+        Note: This is a manual calculation for debugging purposes.
+        The official total price from Tibber API is in electricity_price_total_incl_vat.
+        """
         # Get the current energy price (quarter-hourly aware)
         energy = self.electricity_price_excl_base
         if energy is None:
             return None
             
-        surcharge = float(self._tibber_control.surcharge_price_excl or 0)
-        tax_per_kwh = float(self._tibber_control.tax_per_kwh or 0)
-        tax_rate = float(self._tibber_control.tax_rate or 1.0)
+        # Manual calculation to verify components:
+        # 1. Spotprijs × BTW
+        # 2. + Tibber surcharge (already includes BTW) 
+        # 3. + Energiebelasting (already includes BTW)
         
-        return (energy + surcharge + tax_per_kwh) * tax_rate
+        spotprijs_incl_btw = energy * float(self._tibber_control.tax_rate or 1.0)
+        surcharge_incl_btw = float(self._tibber_control.surcharge_price_incl or 0)
+        tax_per_kwh_incl_btw = float(self._tibber_control.tax_per_kwh or 0)
+        
+        return spotprijs_incl_btw + surcharge_incl_btw + tax_per_kwh_incl_btw
 
     @property
     def tax_rate(self) -> float | None:
