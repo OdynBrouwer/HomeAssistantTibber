@@ -56,7 +56,7 @@ Reference `examples/automation_teruglevering_schakelen.yaml` for:
 ## Configuration Flow
 - `config_flow.py`: Token validation via GraphQL, options for tax rates and surcharges
 - Required: `CONF_ACCESS_TOKEN` from developer.tibber.com
-- Optional: `CONF_TAX_RATE`, `CONF_SURCHARGE_PRICE_INCL`, `CONF_TAX_PER_KWH`
+- Optional: `CONF_BTW_PERCENTAGE`, `CONF_PURCHASING_COMPENSATION`, `CONF_ELECTRICITY_ENERGY_TAX_INCL_BTW`
 
 ## Development Patterns
 
@@ -83,9 +83,9 @@ DOMAIN = "tibber_adv"                    # Never change this
 MANUFACTURER = "Tibber"
 
 # Dutch market defaults (2024/2025)
-DEFAULT_TAX_RATE = 21.0                  # BTW percentage
-DEFAULT_TAX_PER_KWH = 0.10154           # Energiebelasting per kWh
-DEFAULT_SURCHARGE_PRICE_INCL = 0.0123   # Tibber surcharge incl BTW (about 1.23 cent)
+DEFAULT_BTW_PERCENTAGE = 21.0                  # BTW percentage
+DEFAULT_ELECTRICITY_ENERGY_TAX_INCL_BTW = 0.1228   # Energiebelasting incl BTW per kWh (2024/2025)
+DEFAULT_PURCHASING_COMPENSATION = 0.0205        # Tibber inkoopvergoeding excl BTW
 ```
 
 ## File Naming Convention

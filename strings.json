@@ -36,13 +36,13 @@
         "state": "Price rank 0-1 comparing current hour to 18:00-00:00 period"
       },
 
-      "electricity_price_surcharge_excl": {
-        "name": "Surcharge excl VAT (configured)",
-        "state": "Fixed surcharge configured in integration options, excluding VAT"
+      "electricity_price_purchasing_compensation_excl": {
+        "name": "Purchasing compensation excl VAT (configured)",
+        "state": "Tibber inkoopvergoeding configured in integration options, excluding VAT"
       },
-      "electricity_price_surcharge_incl": {
-        "name": "Surcharge incl VAT (calculated)",
-        "state": "Fixed surcharge with VAT applied"
+      "electricity_price_purchasing_compensation_incl": {
+        "name": "Purchasing compensation incl VAT (calculated)",
+        "state": "Tibber inkoopvergoeding with VAT applied"
       },
       "electricity_price_hist": {
         "name": "Base energy price (historical)",
@@ -169,6 +169,14 @@
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "description": "Enter your access token from {url}"
+      },
+      "init": {
+        "data": {
+          "electricity_energy_tax_incl_btw": "Electricity energy tax incl BTW (EUR/kWh)",
+          "tax_rate": "VAT rate (%)",
+          "purchasing_compensation": "Purchasing compensation (EUR/kWh)"
+        },
+        "description": "Configure Dutch electricity price components"
       }
     }
   },

@@ -5,11 +5,11 @@ DOMAIN = "tibber_adv"
 MANUFACTURER = "Tibber"
 
 # Configuration constants
-CONF_SURCHARGE_PRICE_INCL = "surcharge_price_incl"
-CONF_TAX_RATE = "tax_rate"
-CONF_TAX_PER_KWH = "tax_per_kwh"
+CONF_ELECTRICITY_ENERGY_TAX_INCL_BTW = "electricity_energy_tax_incl_btw"
+CONF_BTW_PERCENTAGE = "btw_percentage"
+CONF_PURCHASING_COMPENSATION = "purchasing_compensation"
 
 # Default values
-DEFAULT_SURCHARGE_PRICE_INCL = 0.0123  # Tibber surcharge incl BTW (ongeveer 1.23 cent)
-DEFAULT_TAX_RATE = 21.0  # BTW percentage
-DEFAULT_TAX_PER_KWH = 0.10154  # Energiebelasting per kWh
+DEFAULT_ELECTRICITY_ENERGY_TAX_INCL_BTW = 0.1228  # Energiebelasting incl BTW per kWh (2024/2025)
+DEFAULT_BTW_PERCENTAGE = 21.0  # BTW percentage
+DEFAULT_PURCHASING_COMPENSATION = 0.0205  # Inkoopvergoeding excl BTW per kWh

@@ -22,12 +22,12 @@ from homeassistant.helpers import selector
 
 from .const import (
     DOMAIN,
-    CONF_SURCHARGE_PRICE_INCL,
-    CONF_TAX_RATE,
-    CONF_TAX_PER_KWH,
-    DEFAULT_SURCHARGE_PRICE_INCL,
-    DEFAULT_TAX_RATE,
-    DEFAULT_TAX_PER_KWH,
+    CONF_ELECTRICITY_ENERGY_TAX_INCL_BTW,
+    CONF_BTW_PERCENTAGE,
+    CONF_PURCHASING_COMPENSATION,
+    DEFAULT_ELECTRICITY_ENERGY_TAX_INCL_BTW,
+    DEFAULT_BTW_PERCENTAGE,
+    DEFAULT_PURCHASING_COMPENSATION,
 )
 
 DATA_SCHEMA = vol.Schema({
@@ -96,9 +96,9 @@ class TibberConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             options = {
-                CONF_SURCHARGE_PRICE_INCL: DEFAULT_SURCHARGE_PRICE_INCL,
-                CONF_TAX_RATE: DEFAULT_TAX_RATE,
-                CONF_TAX_PER_KWH: DEFAULT_TAX_PER_KWH,
+                CONF_ELECTRICITY_ENERGY_TAX_INCL_BTW: DEFAULT_ELECTRICITY_ENERGY_TAX_INCL_BTW,
+                CONF_BTW_PERCENTAGE: DEFAULT_BTW_PERCENTAGE,
+                CONF_PURCHASING_COMPENSATION: DEFAULT_PURCHASING_COMPENSATION,
             }
             return self.async_create_entry(
                 title=tibber_connection.name,
@@ -146,18 +146,18 @@ class OptionsFlowHandler(OptionsFlow):
             step_id="init",
             data_schema= vol.Schema({
                 vol.Required(
-                    CONF_SURCHARGE_PRICE_INCL,
-                    default=self._config_entry.options.get(CONF_SURCHARGE_PRICE_INCL, DEFAULT_SURCHARGE_PRICE_INCL),
+                    CONF_ELECTRICITY_ENERGY_TAX_INCL_BTW,
+                    default=self._config_entry.options.get(CONF_ELECTRICITY_ENERGY_TAX_INCL_BTW, DEFAULT_ELECTRICITY_ENERGY_TAX_INCL_BTW),
                 ): vol.All(vol.Coerce(float), vol.Range(min=0, max=1)),
 
                 vol.Required(
-                    CONF_TAX_RATE,
-                    default=self._config_entry.options.get(CONF_TAX_RATE, DEFAULT_TAX_RATE),
+                    CONF_BTW_PERCENTAGE,
+                    default=self._config_entry.options.get(CONF_BTW_PERCENTAGE, DEFAULT_BTW_PERCENTAGE),
                 ): vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
 
                 vol.Required(
-                    CONF_TAX_PER_KWH,
-                    default=self._config_entry.options.get(CONF_TAX_PER_KWH, DEFAULT_TAX_PER_KWH),
+                    CONF_PURCHASING_COMPENSATION,
+                    default=self._config_entry.options.get(CONF_PURCHASING_COMPENSATION, DEFAULT_PURCHASING_COMPENSATION),
                 ): vol.All(vol.Coerce(float), vol.Range(min=0, max=1)),
             }),
 

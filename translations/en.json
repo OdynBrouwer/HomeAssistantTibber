@@ -18,9 +18,9 @@
             "settings": {
                 "data": {
                     "not_in_use": "Not in use with YAML",
-                    "surcharge_price_excl": "Surcharge price per kWh Excl Tax",
-                    "tax_rate": "Tax Rate",
-                    "tax_per_kwh": "Tax fee per kWh"
+                    "purchasing_compensation": "Purchasing compensation per kWh Excl BTW",
+                    "btw_percentage": "BTW Rate",
+                    "electricity_energy_tax_incl_btw": "Electricity energy tax fee per kWh incl BTW"
                    
                    
                 }
@@ -37,9 +37,9 @@
             "init": {
                 "data": {
                     "not_in_use": "Not in use with YAML",
-                    "surcharge_price_excl": "Surcharge price per kWh Excl Tax",
-                    "tax_rate": "Tax Rate",
-                    "tax_per_kwh": "Tax fee per kWh"
+                    "purchasing_compensation": "Purchasing compensation per kWh Excl BTW",
+                    "btw_percentage": "BTW Rate",
+                    "electricity_energy_tax_incl_btw": "Electricity energy tax fee per kWh incl BTW"
                    
                    
                 }

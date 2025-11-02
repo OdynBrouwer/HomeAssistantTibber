@@ -10,5 +10,5 @@
   "loggers": ["tibber_adv", "gql.transport.websockets"],
   "quality_scale": "silver",
   "requirements": ["pyTibber>=0.32.2"],
-  "version": "0.2.1"
+  "version": "0.3.0"
 }

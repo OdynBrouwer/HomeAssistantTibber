@@ -55,7 +55,7 @@ template:
 #         icon: mdi:solar-power
 #         state: >
 #           {% set spotprijs = states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) %}
-#           {{ (spotprijs * 1.21) | round(4) }}
+#           {{ spotprijs | round(4) }}
 #         availability: >
 #           {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') not in ['unavailable', 'unknown', 'none'] }}
 #         attributes:
@@ -65,7 +65,7 @@ template:
 #             {{ (states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) * 1.21) | round(4) }}
 #           eb_refund: 0.0
 #           geldig_vanaf: "2027-01-01"
-#           toelichting: "Alleen spotprijs × 1.21 (geen energiebelasting meer)"
+#           toelichting: "Alleen spotprijs EXCL BTW (geen energiebelasting, geen BTW meer)"
 
 # ==============================================================================
 # UITLEG: Wat gebeurt er hier?
@@ -84,6 +84,7 @@ template:
 #
 # VOORBEELDEN:
 #
+# TOT 2027 (met EB refund):
 # Spotprijs +0.10 EUR/kWh (EB = 0.12286):
 #   (0.10 × 1.21) + 0.12286 = 0.121 + 0.12286 = 0.24386 EUR/kWh
 #   → Je krijgt 24 cent per kWh ✅
@@ -92,14 +93,18 @@ template:
 #   (-0.05 × 1.21) + 0.12286 = -0.0605 + 0.12286 = 0.06236 EUR/kWh
 #   → Je krijgt nog steeds 6 cent per kWh! ✅ (tot 2027)
 #
-# Spotprijs -0.15 EUR/kWh (zeer negatief):
-#   (-0.15 × 1.21) + 0.12286 = -0.1815 + 0.12286 = -0.05864 EUR/kWh
-#   → Je betaalt 6 cent per kWh ❌ (schakel uit!)
+# NA 2027 (zonder EB en BTW):
+# Spotprijs +0.10 EUR/kWh:
+#   0.10 EUR/kWh
+#   → Je krijgt 10 cent per kWh ✅
 #
-# Na 2027 zonder energiebelasting:
 # Spotprijs -0.05 EUR/kWh:
-#   -0.05 × 1.21 = -0.0605 EUR/kWh
-#   → Je betaalt 6 cent per kWh ❌ (schakel altijd uit bij negatief!)
+#   -0.05 EUR/kWh
+#   → Je betaalt 5 cent per kWh ❌ (schakel uit!)
+#
+# Spotprijs -0.15 EUR/kWh (zeer negatief):
+#   -0.15 EUR/kWh
+#   → Je betaalt 15 cent per kWh ❌ (zeker uitschakelen!)
 #
 # ==============================================================================
 # WAAROM DYNAMISCHE SENSOR GEBRUIKEN?

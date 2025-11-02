@@ -345,8 +345,8 @@ class TibberHome:
                 self._price_info[data.get("startsAt")] = { 
                     'total': data.get("total"),  # The total price (energy + taxes)
                     'energy': data.get("energy"),  # Nord Pool spot price
-                    'energy_ws': data.get("energy") + self._tibber_control.surcharge_price_excl,
-                    'energy_wsi': (data.get("energy") + self._tibber_control.surcharge_price_excl) *self._tibber_control.tax_rate,
+                    'energy_ws': data.get("energy") + self._tibber_control.purchasing_compensation,
+                    'energy_wsi': (data.get("energy") + self._tibber_control.purchasing_compensation) * self._tibber_control.tax_rate,
                     # The tax part of the price (guarantee of origin certificate, energy tax (Sweden only) and VAT)
                     # NOTE: For non-Swedish countries, this includes VAT on the spot price + other fixed costs
                     'tax': data.get("tax"),
@@ -445,22 +445,30 @@ class TibberHome:
         
         Note: This is a manual calculation for debugging purposes.
         The official total price from Tibber API is in electricity_price_total_incl_vat.
+        
+        Dutch calculation: (spotprijs + inkoopvergoeding + energiebelasting) × BTW
         """
         # Get the current energy price (quarter-hourly aware)
         energy = self.electricity_price_excl_base
         if energy is None:
             return None
             
-        # Manual calculation to verify components:
-        # 1. Spotprijs × BTW
-        # 2. + Tibber surcharge (already includes BTW) 
-        # 3. + Energiebelasting (already includes BTW)
-        
-        spotprijs_incl_btw = energy * float(self._tibber_control.tax_rate or 1.0)
-        surcharge_incl_btw = float(self._tibber_control.surcharge_price_incl or 0)
-        tax_per_kwh_incl_btw = float(self._tibber_control.tax_per_kwh or 0)
-        
-        return spotprijs_incl_btw + surcharge_incl_btw + tax_per_kwh_incl_btw
+        # Dutch calculation method:
+        # All components excl BTW first, then apply BTW to total
+        try:
+            spotprijs_excl_btw = energy
+            purchasing_compensation_excl_btw = float(self._tibber_control.purchasing_compensation or 0)
+            energy_tax_excl_btw = float(self._tibber_control.electricity_energy_tax_excl_btw or 0)
+            tax_rate = float(self._tibber_control.tax_rate or 1.0)
+            
+            # Sum all components excl BTW
+            subtotal_excl_btw = spotprijs_excl_btw + purchasing_compensation_excl_btw + energy_tax_excl_btw
+            
+            # Apply BTW to total
+            return subtotal_excl_btw * tax_rate
+            
+        except (ValueError, TypeError):
+            return None
 
     @property
     def tax_rate(self) -> float | None:
@@ -472,18 +480,20 @@ class TibberHome:
             return None
 
     @property
-    def electricity_price_surcharge_excl(self) -> float | None:
-        """Get current price total."""
-        return self._tibber_control.surcharge_price_excl 
-
+    def electricity_price_purchasing_compensation_excl(self) -> float | None:
+        """Get purchasing compensation excluding VAT."""
+        try:
+            return float(self._tibber_control.purchasing_compensation or 0)
+        except (ValueError, TypeError):
+            return None
 
     @property
-    def electricity_price_surcharge_incl(self) -> float | None:
-        """Get surcharge including tax."""
+    def electricity_price_purchasing_compensation_incl(self) -> float | None:
+        """Get purchasing compensation including VAT."""
         try:
-            surcharge = float(self._tibber_control.surcharge_price_excl or 0)
+            compensation = float(self._tibber_control.purchasing_compensation or 0)
             tax_rate = float(self._tibber_control.tax_rate or 1.0)
-            return surcharge * tax_rate
+            return compensation * tax_rate
         except (ValueError, TypeError):
             return None
 
@@ -491,7 +501,7 @@ class TibberHome:
     def electricity_price_energy_tax_excl(self) -> float | None:
         """Get energy tax excluding VAT."""
         try:
-            return float(self._tibber_control.tax_per_kwh or 0)
+            return float(self._tibber_control.electricity_energy_tax_excl_btw or 0)
         except (ValueError, TypeError):
             return None
 
@@ -499,9 +509,7 @@ class TibberHome:
     def electricity_price_energy_tax_incl(self) -> float | None:
         """Get energy tax including VAT."""
         try:
-            tax = float(self._tibber_control.tax_per_kwh or 0)
-            tax_rate = float(self._tibber_control.tax_rate or 1.0)
-            return tax * tax_rate
+            return float(self._tibber_control.electricity_energy_tax_incl_btw or 0)
         except (ValueError, TypeError):
             return None
 
@@ -533,14 +541,14 @@ class TibberHome:
 
     @property
     def electricity_price_excl(self) -> float | None:
-        """Get price including surcharge but excluding tax."""
+        """Get price including purchasing compensation but excluding tax."""
         # Get the current energy price (quarter-hourly aware)
         energy = self.electricity_price_excl_base
         if energy is None:
             return None
         try:
-            surcharge = float(self._tibber_control.surcharge_price_excl or 0)
-            return energy + surcharge
+            compensation = float(self._tibber_control.purchasing_compensation or 0)
+            return energy + compensation
         except (ValueError, TypeError):
             return None
 

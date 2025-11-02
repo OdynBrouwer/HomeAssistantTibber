@@ -23,12 +23,12 @@ from homeassistant.util import dt as dt_util
 from .const import (
     DATA_HASS_CONFIG,
     DOMAIN,
-    CONF_SURCHARGE_PRICE_INCL,
-    CONF_TAX_RATE,
-    CONF_TAX_PER_KWH,
-    DEFAULT_SURCHARGE_PRICE_INCL,
-    DEFAULT_TAX_RATE,
-    DEFAULT_TAX_PER_KWH,
+    CONF_ELECTRICITY_ENERGY_TAX_INCL_BTW,
+    CONF_BTW_PERCENTAGE,
+    CONF_PURCHASING_COMPENSATION,
+    DEFAULT_ELECTRICITY_ENERGY_TAX_INCL_BTW,
+    DEFAULT_BTW_PERCENTAGE,
+    DEFAULT_PURCHASING_COMPENSATION,
 )
 
 PLATFORMS = [Platform.SENSOR]
@@ -50,9 +50,9 @@ def create_tibber_connection(hass: HomeAssistant, entry: ConfigEntry) -> Tibber:
         access_token=entry.data[CONF_ACCESS_TOKEN],
         websession=async_get_clientsession(hass),
         time_zone=dt_util.DEFAULT_TIME_ZONE,
-        tax_rate=entry.options.get(CONF_TAX_RATE, DEFAULT_TAX_RATE),
-        surcharge_price_incl=entry.options.get(CONF_SURCHARGE_PRICE_INCL, DEFAULT_SURCHARGE_PRICE_INCL),
-        tax_per_kwh=entry.options.get(CONF_TAX_PER_KWH, DEFAULT_TAX_PER_KWH),
+        tax_rate=entry.options.get(CONF_BTW_PERCENTAGE, DEFAULT_BTW_PERCENTAGE),
+        electricity_energy_tax_incl_btw=entry.options.get(CONF_ELECTRICITY_ENERGY_TAX_INCL_BTW, DEFAULT_ELECTRICITY_ENERGY_TAX_INCL_BTW),
+        purchasing_compensation=entry.options.get(CONF_PURCHASING_COMPENSATION, DEFAULT_PURCHASING_COMPENSATION),
     )
 
 

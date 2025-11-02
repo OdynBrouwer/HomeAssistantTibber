@@ -35,8 +35,8 @@ class Tibber:
         time_zone: dt.tzinfo | None = None,
         user_agent: str | None = None,
         tax_rate: float = 0,
-        surcharge_price_incl: float = 0.1228,  # Default Tibber surcharge incl BTW
-        tax_per_kwh: float = 0,
+        electricity_energy_tax_incl_btw: float = 0.1228,  # Energiebelasting incl BTW
+        purchasing_compensation: float = 0.0205,  # Inkoopvergoeding per kWh
         
     ):
         """Initialize the Tibber connection.
@@ -47,8 +47,8 @@ class Tibber:
         :param time_zone: The time zone to display times in and to use.
         :param user_agent: User agent identifier for the platform running this. Required if websession is None.
         :param tax_rate: BTW percentage (default: 0)
-        :param surcharge_price_incl: Tibber surcharge including BTW (default: 0.1228)
-        :param tax_per_kwh: Energy tax per kWh (default: 0)
+        :param electricity_energy_tax_incl_btw: Energiebelasting incl BTW (default: 0.1228)
+        :param purchasing_compensation: Inkoopvergoeding per kWh (default: 0.0205)
         """
 
         if websession is None:
@@ -64,10 +64,11 @@ class Tibber:
         self._tax_rate = 1.0 + tax_rate/100.0
         self._tax_rate_percentage = tax_rate
         
-        # Automatically calculate surcharge_price_excl from surcharge_price_incl
-        self._surcharge_price_incl = surcharge_price_incl
-        self._surcharge_price_excl = surcharge_price_incl / self._tax_rate
-        self._tax_per_kwh = tax_per_kwh
+        # Store the Dutch electricity components
+        self._electricity_energy_tax_incl_btw = electricity_energy_tax_incl_btw
+        self._electricity_energy_tax_excl_btw = electricity_energy_tax_incl_btw / self._tax_rate
+        self._purchasing_compensation = purchasing_compensation
+        self._purchasing_compensation_incl_btw = purchasing_compensation * self._tax_rate
         self.realtime: TibberRT = TibberRT(
             self._access_token,
             self.timeout,
@@ -239,24 +240,29 @@ class Tibber:
 
 
     @property
-    def tax_rate(self) -> str | None:
-        """Return user id of user."""
+    def tax_rate(self) -> float:
+        """Return tax rate (1.21 for 21% BTW)."""
         return self._tax_rate
 
     @property
-    def surcharge_price_excl(self) -> float:
-        """Return the Tibber surcharge excluding BTW."""
-        return self._surcharge_price_excl
+    def electricity_energy_tax_incl_btw(self) -> float:
+        """Return the energiebelasting including BTW."""
+        return self._electricity_energy_tax_incl_btw
 
     @property
-    def surcharge_price_incl(self) -> float:
-        """Return the Tibber surcharge including BTW."""
-        return self._surcharge_price_incl
+    def electricity_energy_tax_excl_btw(self) -> float:
+        """Return the energiebelasting excluding BTW."""
+        return self._electricity_energy_tax_excl_btw
+
+    @property
+    def purchasing_compensation(self) -> float:
+        """Return the inkoopvergoeding excluding BTW."""
+        return self._purchasing_compensation
     
     @property
-    def tax_per_kwh(self) -> str | None:
-        """Return user id of user."""
-        return self._tax_per_kwh
+    def purchasing_compensation_incl_btw(self) -> float:
+        """Return the inkoopvergoeding including BTW."""
+        return self._purchasing_compensation_incl_btw
 
     @property
     def user_id(self) -> str | None:

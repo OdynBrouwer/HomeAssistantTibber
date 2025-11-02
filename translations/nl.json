@@ -14,6 +14,31 @@
                     "access_token": "Toegangstoken"
                 },
                 "description": "Voer uw toegangstoken in van {url}"
+            },
+            "init": {
+                "data": {
+                    "electricity_energy_tax_incl_btw": "Energiebelasting incl. BTW (EUR/kWh)",
+                    "btw_percentage": "BTW tarief (%)",
+                    "purchasing_compensation": "Inkoopvergoeding (EUR/kWh)"
+                },
+                "description": "Configureer Nederlandse stroomprijscomponenten"
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "not_setup": "Tibber Advanced is niet ingesteld.",
+            "pending_tasks": "Er zijn lopende taken. Probeer het later opnieuw.",
+            "release_limit_value": "De release limiet moet tussen 1 en 100 liggen."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "electricity_energy_tax_incl_btw": "Energiebelasting incl. BTW (EUR/kWh)",
+                    "btw_percentage": "BTW tarief (%)",
+                    "purchasing_compensation": "Inkoopvergoeding excl. BTW (EUR/kWh)"
+                },
+                "description": "Configureer Nederlandse stroomprijscomponenten"
             }
         }
     },
@@ -24,28 +49,28 @@
                 "state": "Totale verbruiksprijs per kWh van Tibber API (spotprijs + alle kosten incl. BTW). Gebruik dit voor verbruiksbeslissingen."
             },
             "electricity_price_excl": {
-                "name": "Prijs excl. BTW (berekend)",
+                "name": "Spotprijs + Inkoopvergoeding (excl. BTW)",
                 "state": "Prijs voor BTW: {0}/kWh"
             },
             "electricity_price_excl_cent": {
-                "name": "Prijs excl. BTW in centen (berekend)",
+                "name": "Spotprijs + Inkoopvergoeding (in centen)",
                 "state": "Prijs voor BTW: {0} cent/kWh"
             },
             "electricity_price_calc": {
-                "name": "Totaalprijs (berekend)",
-                "state": "Berekend: {0}/kWh = (energie + toeslag + belasting) × BTW"
+                "name": "Totaalprijs (handmatig berekend)",
+                "state": "Berekend: {0}/kWh = (spotprijs + inkoopvergoeding + energiebelasting) × 1.21"
             },
             "electricity_price_excl_base": {
-                "name": "Basis energieprijs zonder toeslag",
+                "name": "Nord Pool spotprijs",
                 "state": "Nord Pool spotprijs van Tibber API (energy veld). Gebruik dit voor terugleveringsbeslissingen (kan negatief zijn)."
             },
-            "electricity_price_surcharge_excl": {
-                "name": "Toeslag excl. BTW (geconfigureerd)",
-                "state": "Vaste toeslag: {0}/kWh (voor BTW)"
+            "electricity_price_purchasing_compensation_excl": {
+                "name": "Inkoopvergoeding excl. BTW (geconfigureerd)",
+                "state": "Tibber inkoopvergoeding: {0}/kWh (voor BTW)"
             },
-            "electricity_price_surcharge_incl": {
-                "name": "Toeslag incl. BTW (berekend)",
-                "state": "Vaste toeslag: {0}/kWh (met BTW)"
+            "electricity_price_purchasing_compensation_incl": {
+                "name": "Inkoopvergoeding incl. BTW (berekend)",
+                "state": "Tibber inkoopvergoeding: {0}/kWh (met BTW)"
             },
             "electricity_price_energy_tax_excl": {
                 "name": "Energiebelasting excl. BTW (geconfigureerd)",

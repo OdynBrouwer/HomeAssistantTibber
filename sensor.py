@@ -376,8 +376,8 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     
     TibberSensorEntityDescription(
-        key="electricity_price_surcharge_excl",
-        translation_key="electricity_price_surcharge_excl",
+        key="electricity_price_purchasing_compensation_excl",
+        translation_key="electricity_price_purchasing_compensation_excl",
         device_class=SensorDeviceClass.MONETARY,
 
         native_unit_of_measurement_key = "price_unit",
@@ -388,8 +388,8 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
 
     TibberSensorEntityDescription(
-        key="electricity_price_surcharge_incl",
-        translation_key="electricity_price_surcharge_incl",
+        key="electricity_price_purchasing_compensation_incl",
+        translation_key="electricity_price_purchasing_compensation_incl",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement_key = "price_unit",
         icon= ICON,
