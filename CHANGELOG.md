@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2025-11-02
+
+### 🐛 Bug Fixes
+
+#### Price Calculation Corrections
+- **Fixed DEFAULT_SURCHARGE_PRICE_INCL** from 0.1228 to 0.0123 EUR/kWh (correct Tibber surcharge of ~1.23 cent)
+- **Improved electricity_price_calc function** with better debugging information and proper component breakdown
+- **Fixed calculated total price sensor** that was showing 0.3264 instead of expected ~0.2284 EUR/kWh due to 10x too high surcharge
+
+#### Development & Documentation
+- **Added comprehensive AI development instructions** in `.github/copilot-instructions.md` for coding agents
+- **Clarified sensor usage patterns** for consumption vs solar feed-in decisions
+- **Updated documentation** to prevent confusion between different price sensors
+
+### ⚠️ Important Notes
+- **Existing users**: Please update your configuration via Settings > Devices & Services > Tibber Advanced > Configure
+- **Change "Surcharge Price (incl BTW)" from 0.1228 to 0.0123** to get correct price calculations
+- **New installations** will automatically use the correct default values
+
 ## [0.2.0] - 2025-10-29
 
 ### 🎉 Major Improvements
