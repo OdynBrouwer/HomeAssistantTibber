@@ -2,9 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2025-11-03
+
+### 🔧 Network Resilience Improvements
+
+#### Enhanced Error Handling & Reconnection
+- **Improved server error handling**: 5xx HTTP errors (502, 503, 504) now treated as retryable instead of fatal
+- **Better WebSocket reconnection**: Exponential backoff (30s → 10min) with jitter to prevent thundering herd
+- **Automatic connection reset**: Full WebSocket reset after 10 failed attempts for fresh start
+- **Smarter retry logic**: Different retry strategies for different error types
+- **Reduced log noise**: Warning level for first 3 attempts, error level with stacktrace after that
+
+#### Network Problem Resolution
+- **HTML error pages**: Server error pages (text/html) during outages now handled as temporary failures
+- **Gateway timeouts**: 504 errors properly retried instead of treated as fatal
+- **Connection persistence**: Better handling of temporary network issues and server maintenance
+
+---
+
 ## [0.3.0] - 2025-11-02
 
-### � Major Refactoring: Dutch Market Configuration
+### 🚀 Major Refactoring: Dutch Market Configuration
 
 #### Complete Configuration Parameter Restructuring
 - **BREAKING**: Configuration parameter names completely renamed for clarity

@@ -33,11 +33,20 @@ async def extract_response_data(response: ClientResponse) -> dict[Any, Any]:
     _LOGGER.debug("Response status: %s", response.status)
 
     if response.content_type != "application/json":
-        raise FatalHttpExceptionError(
-            response.status,
-            f"Unexpected content type: {response.content_type}",
-            API_ERR_CODE_UNKNOWN,
-        )
+        # Bij netwerkproblemen kan server HTML error pages sturen
+        # 5xx errors zijn tijdelijke server problemen
+        if 500 <= response.status < 600:
+            raise RetryableHttpExceptionError(
+                response.status,
+                f"Server error with content type: {response.content_type}",
+                API_ERR_CODE_UNKNOWN,
+            )
+        else:
+            raise FatalHttpExceptionError(
+                response.status,
+                f"Unexpected content type: {response.content_type}",
+                API_ERR_CODE_UNKNOWN,
+            )
 
     result = await response.json()
 

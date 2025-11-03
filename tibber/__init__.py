@@ -129,22 +129,50 @@ class Tibber:
                 _LOGGER.exception("Error connecting to Tibber")
             raise
         except (InvalidLoginError, FatalHttpExceptionError) as err:
-            # 504 Gateway Timeout is een tijdelijk server probleem, niet fataal
-            if err.status == 504:
-                _LOGGER.warning(
-                    "Tibber API server timeout (504), wordt automatisch opnieuw geprobeerd"
-                )
+            # 504 Gateway Timeout en 502/503 zijn tijdelijke server problemen
+            if hasattr(err, 'status') and err.status in (502, 503, 504):
+                if retry > 0:
+                    _LOGGER.warning(
+                        "Tibber API server probleem (%s), opnieuw proberen (%s pogingen over)",
+                        err.status, retry
+                    )
+                    await asyncio.sleep(2)  # Korte vertraging voor server recovery
+                    return await self.execute(
+                        document,
+                        variable_values,
+                        timeout,
+                        retry - 1,
+                    )
+                else:
+                    _LOGGER.warning(
+                        "Tibber API server timeout (%s), alle pogingen gefaald",
+                        err.status
+                    )
             else:
                 _LOGGER.error(
                     "Fatale fout bij Tibber API communicatie, HTTP status: %s. API error: %s / %s",
-                    err.status,
-                    err.extension_code,
-                    err.message,
+                    getattr(err, 'status', 'unknown'),
+                    getattr(err, 'extension_code', 'unknown'),
+                    getattr(err, 'message', str(err)),
                 )
             raise
         except RetryableHttpExceptionError as err:
+            if retry > 0:
+                _LOGGER.warning(
+                    "Tijdelijke Tibber API fout (HTTP %s), opnieuw proberen (%s pogingen over): %s",
+                    err.status,
+                    retry,
+                    err.message,
+                )
+                await asyncio.sleep(2)  # Korte vertraging
+                return await self.execute(
+                    document,
+                    variable_values,
+                    timeout,
+                    retry - 1,
+                )
             _LOGGER.warning(
-                "Temporary failure interacting with Tibber API, HTTP status: %s. API error: %s / %s",
+                "Tijdelijke Tibber API fout na alle pogingen, HTTP status: %s. API error: %s / %s",
                 err.status,
                 err.extension_code,
                 err.message,

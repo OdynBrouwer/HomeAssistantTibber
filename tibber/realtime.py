@@ -171,18 +171,46 @@ class TibberRT:
                 await self.sub_manager.connect_async()  # type: ignore
                 await self._resubscribe_homes()
             except Exception as err:  # pylint: disable=broad-except
-                delay_seconds = min(
-                    random.SystemRandom().randint(1, 60) + _retry_count**2,
-                    20 * 60,
-                )
+                # Exponential backoff met maximum
+                base_delay = 30  # Base delay van 30 seconden
+                max_delay = 10 * 60  # Maximum 10 minuten
+                exponential_delay = min(base_delay * (2 ** min(_retry_count, 6)), max_delay)
+                
+                # Voeg een beetje randomness toe om thundering herd te voorkomen
+                jitter = random.SystemRandom().randint(-10, 10)
+                delay_seconds = max(10, exponential_delay + jitter)
+                
                 _retry_count += 1
-                _LOGGER.warning(
-                    "Herverbinden met Tibber mislukt (poging %s), nieuwe poging over %s seconden. Reden: %s",
-                    _retry_count,
-                    delay_seconds,
-                    str(err),
-                    exc_info=_retry_count > 3,  # Alleen volledige stacktrace na 3 pogingen
-                )
+                
+                # Log niveau afhankelijk van aantal pogingen
+                if _retry_count <= 3:
+                    _LOGGER.warning(
+                        "Herverbinden met Tibber mislukt (poging %s), nieuwe poging over %s seconden. Reden: %s",
+                        _retry_count,
+                        delay_seconds,
+                        str(err),
+                    )
+                else:
+                    _LOGGER.error(
+                        "Herverbinden met Tibber mislukt (poging %s), nieuwe poging over %s seconden. Reden: %s",
+                        _retry_count,
+                        delay_seconds,
+                        str(err),
+                        exc_info=True,  # Volledige stacktrace na 3 pogingen
+                    )
+                
+                # Reset connection na veel pogingen voor fresh start
+                if _retry_count >= 10:
+                    _LOGGER.warning(
+                        "Te veel herverbinding pogingen (%s), reset WebSocket connectie volledig",
+                        _retry_count
+                    )
+                    try:
+                        await self.sub_manager.close_async()
+                    except Exception:  # pylint: disable=broad-except
+                        pass  # Ignore close errors, we're resetting anyway
+                    _retry_count = 0  # Reset counter na connection reset
+                
                 await asyncio.sleep(delay_seconds)
             else:
                 _LOGGER.debug("Watchdog: Reconnected successfully")
