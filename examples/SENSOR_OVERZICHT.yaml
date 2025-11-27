@@ -40,17 +40,17 @@
 # Dit is de OFFICIËLE Tibber API prijs inclusief ALLES:
 # - Nord Pool spotprijs
 # - Tibber inkoopvergoeding (surcharge)
-# - Energiebelasting
+# - Energiebelasting (NL)
 # - BTW (21%)
 #
 # Attributen:
 price_info_summary:
   current:
     startsAt: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.startsAt }}
-    total: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.total }}
-    energy: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.energy }}
-    tax: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.tax }}
-    level: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.level }}
+    total: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.total }}  # Totale prijs incl. alles
+    energy: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.energy }}  # Nord Pool spotprijs (excl. alles)
+    tax: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.tax }}  # ⚠️ ZWEEDS veld (niet NL energiebelasting!)
+    level: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.level }}  # VERY_CHEAP/CHEAP/NORMAL/EXPENSIVE/VERY_EXPENSIVE
   
   upcoming: (6 volgende kwartieren)
     # Gebruik: state_attr(...).upcoming[0].total voor volgend kwartier
@@ -77,7 +77,7 @@ price_info_summary:
     tomorrow_avg: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_avg }}
 
 # --------------------------------------------------------------------------------
-# 1.2 SPOTPRIJS ZONDER KOSTEN (GEBRUIKEN VOOR ZONNEPANELEN!)
+# 1.2 NORD POOL SPOTPRIJS (GEBRUIKEN VOOR ZONNEPANELEN!)
 # --------------------------------------------------------------------------------
 # Entity: sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
 # Key: electricity_price_excl_base
@@ -86,11 +86,12 @@ price_info_summary:
 #
 # Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') }} EUR/kWh
 #
-# Dit is de NORD POOL SPOTPRIJS exclusief alle kosten:
-# - Geen Tibber surcharge
-# - Geen energiebelasting
-# - Geen BTW
-# - KAN NEGATIEF ZIJN! (bij veel zon/wind en weinig vraag)
+# Dit is de PURE NORD POOL SPOTPRIJS (electricity market price):
+# - ✅ Alleen groothandelsprijs elektriciteit
+# - ❌ Geen Tibber surcharge
+# - ❌ Geen energiebelasting  
+# - ❌ Geen BTW
+# - ⚠️ KAN NEGATIEF ZIJN! (bij veel zon/wind en weinig vraag)
 #
 # ⚠️ BELANGRIJK:
 # - Tot 2027: Voor teruglevering bereken: (spotprijs × 1.21) + energiebelasting
