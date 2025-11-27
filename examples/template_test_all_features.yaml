@@ -12,16 +12,16 @@
 # ================================================================================
 
 === TODAY PRICE SENSORS (beschikbaar vanaf 00:00) ===
-Today Min:  {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_min') }} EUR/kWh
-Today Max:  {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_max') }} EUR/kWh
-Today Avg:  {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_avg') }} EUR/kWh
-Range:      {{ (states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_max')|float - states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_min')|float) | round(4) }} EUR/kWh verschil
+Today Min:  {{ states('sensor.tibber_pulse_maanstraat_17_vandaag_laagste_prijs') }} EUR/kWh
+Today Max:  {{ states('sensor.tibber_pulse_maanstraat_17_vandaag_hoogste_prijs') }} EUR/kWh
+Today Avg:  {{ states('sensor.tibber_pulse_maanstraat_17_vandaag_gemiddelde_prijs') }} EUR/kWh
+Range:      {{ (states('sensor.tibber_pulse_maanstraat_17_vandaag_hoogste_prijs')|float - states('sensor.tibber_pulse_maanstraat_17_vandaag_laagste_prijs')|float) | round(4) }} EUR/kWh verschil
 
 === TOMORROW PRICE SENSORS (beschikbaar vanaf ~14:00) ===
-Tomorrow Min: {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_tomorrow_min') }} EUR/kWh
-Tomorrow Max: {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_tomorrow_max') }} EUR/kWh
-Tomorrow Avg: {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_tomorrow_avg') }} EUR/kWh
-Status: {% if states('sensor.tibber_pulse_maanstraat_17_electricity_price_tomorrow_min') == 'unknown' %}⏳ Nog niet gepubliceerd{% else %}✅ Beschikbaar!{% endif %}
+Tomorrow Min: {{ states('sensor.tibber_pulse_maanstraat_17_morgen_laagste_prijs') }} EUR/kWh
+Tomorrow Max: {{ states('sensor.tibber_pulse_maanstraat_17_morgen_hoogste_prijs') }} EUR/kWh
+Tomorrow Avg: {{ states('sensor.tibber_pulse_maanstraat_17_morgen_gemiddelde_prijs') }} EUR/kWh
+Status: {% if states('sensor.tibber_pulse_maanstraat_17_morgen_laagste_prijs') == 'unknown' %}⏳ Nog niet gepubliceerd{% else %}✅ Beschikbaar!{% endif %}
 
 
 # ================================================================================
@@ -246,11 +246,11 @@ Huidig niveau: {{ prices.current.level if prices.current else 'Onbekend' }}
 === 🥷 NINJA QUICK STATUS ===
 
 {% set summary = state_attr('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat', 'price_info_summary') %}
-{% set today_min = states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_min') %}
-{% set tomorrow_min = states('sensor.tibber_pulse_maanstraat_17_electricity_price_tomorrow_min') %}
+{% set today_min = states('sensor.tibber_pulse_maanstraat_17_vandaag_laagste_prijs') %}
+{% set tomorrow_min = states('sensor.tibber_pulse_maanstraat_17_morgen_laagste_prijs') %}
 
 🔋 Huidige prijs: {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat') }} EUR/kWh ({{ summary.current.level if summary and summary.current else 'N/A' }})
-📊 Today range:   {{ today_min }} - {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_max') }} EUR/kWh
+📊 Today range:   {{ today_min }} - {{ states('sensor.tibber_pulse_maanstraat_17_vandaag_hoogste_prijs') }} EUR/kWh
 📅 Tomorrow:      {{ 'Beschikbaar' if tomorrow_min != 'unknown' else 'Nog niet gepubliceerd (rond 14:00)' }}
 📈 Data status:   {{ '✅ Volledig' if summary and summary.today_all | length == 96 else '⚠️ Incompleet' }}
 ⏰ Laatste update: {{ states('sensor.tibber_pulse_maanstraat_17_last_price_update') }}
