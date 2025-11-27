@@ -123,6 +123,54 @@
             "last_meter_production": {
                 "name": "Produktion auf der letzten Meile"
             },
+            "electricity_price_today_min": {
+                "name": "Niedrigster Preis heute",
+                "state": "Niedrigster Strompreis heute (gesamt inkl. MwSt)"
+            },
+            "electricity_price_today_max": {
+                "name": "Höchster Preis heute",
+                "state": "Höchster Strompreis heute (gesamt inkl. MwSt)"
+            },
+            "electricity_price_today_avg": {
+                "name": "Durchschnittspreis heute",
+                "state": "Durchschnittlicher Strompreis heute (gesamt inkl. MwSt)"
+            },
+            "electricity_price_tomorrow_min": {
+                "name": "Niedrigster Preis morgen",
+                "state": "Niedrigster Strompreis morgen (gesamt inkl. MwSt)"
+            },
+            "electricity_price_tomorrow_max": {
+                "name": "Höchster Preis morgen",
+                "state": "Höchster Strompreis morgen (gesamt inkl. MwSt)"
+            },
+            "electricity_price_tomorrow_avg": {
+                "name": "Durchschnittspreis morgen",
+                "state": "Durchschnittlicher Strompreis morgen (gesamt inkl. MwSt)"
+            },
+            "electricity_spotprice_today_min": {
+                "name": "Niedrigster Spotpreis heute",
+                "state": "Niedrigster Spotpreis heute (exkl. Zuschläge, für Solareinspeisung)"
+            },
+            "electricity_spotprice_today_max": {
+                "name": "Höchster Spotpreis heute",
+                "state": "Höchster Spotpreis heute (exkl. Zuschläge, für Solareinspeisung)"
+            },
+            "electricity_spotprice_today_avg": {
+                "name": "Durchschnittlicher Spotpreis heute",
+                "state": "Durchschnittlicher Spotpreis heute (exkl. Zuschläge, für Solareinspeisung)"
+            },
+            "electricity_spotprice_tomorrow_min": {
+                "name": "Niedrigster Spotpreis morgen",
+                "state": "Niedrigster Spotpreis morgen (exkl. Zuschläge, für Solareinspeisung)"
+            },
+            "electricity_spotprice_tomorrow_max": {
+                "name": "Höchster Spotpreis morgen",
+                "state": "Höchster Spotpreis morgen (exkl. Zuschläge, für Solareinspeisung)"
+            },
+            "electricity_spotprice_tomorrow_avg": {
+                "name": "Durchschnittlicher Spotpreis morgen",
+                "state": "Durchschnittlicher Spotpreis morgen (exkl. Zuschläge, für Solareinspeisung)"
+            },
             "max_power": {
                 "name": "Maximale Leistung"
             },

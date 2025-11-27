@@ -167,6 +167,54 @@
             "last_price_update": {
                 "name": "Last price update"
             },
+            "electricity_price_today_min": {
+                "name": "Today minimum price",
+                "state": "Lowest electricity price for today (total incl. VAT)"
+            },
+            "electricity_price_today_max": {
+                "name": "Today maximum price",
+                "state": "Highest electricity price for today (total incl. VAT)"
+            },
+            "electricity_price_today_avg": {
+                "name": "Today average price",
+                "state": "Average electricity price for today (total incl. VAT)"
+            },
+            "electricity_price_tomorrow_min": {
+                "name": "Tomorrow minimum price",
+                "state": "Lowest electricity price for tomorrow (total incl. VAT)"
+            },
+            "electricity_price_tomorrow_max": {
+                "name": "Tomorrow maximum price",
+                "state": "Highest electricity price for tomorrow (total incl. VAT)"
+            },
+            "electricity_price_tomorrow_avg": {
+                "name": "Tomorrow average price",
+                "state": "Average electricity price for tomorrow (total incl. VAT)"
+            },
+            "electricity_spotprice_today_min": {
+                "name": "Today minimum spotprice",
+                "state": "Lowest spotprice for today (excl. surcharges, for solar feed-in)"
+            },
+            "electricity_spotprice_today_max": {
+                "name": "Today maximum spotprice",
+                "state": "Highest spotprice for today (excl. surcharges, for solar feed-in)"
+            },
+            "electricity_spotprice_today_avg": {
+                "name": "Today average spotprice",
+                "state": "Average spotprice for today (excl. surcharges, for solar feed-in)"
+            },
+            "electricity_spotprice_tomorrow_min": {
+                "name": "Tomorrow minimum spotprice",
+                "state": "Lowest spotprice for tomorrow (excl. surcharges, for solar feed-in)"
+            },
+            "electricity_spotprice_tomorrow_max": {
+                "name": "Tomorrow maximum spotprice",
+                "state": "Highest spotprice for tomorrow (excl. surcharges, for solar feed-in)"
+            },
+            "electricity_spotprice_tomorrow_avg": {
+                "name": "Tomorrow average spotprice",
+                "state": "Average spotprice for tomorrow (excl. surcharges, for solar feed-in)"
+            },
             "max_power": {
                 "name": "Max power"
             },
