@@ -28,13 +28,13 @@ cards:
     cards:
       # Huidige prijs
       - type: custom:mushroom-entity-card
-        entity: sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw
+        entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
         name: Huidige Stroomprijs
         icon: mdi:lightning-bolt
         icon_color: >
-          {% if states('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw') | float < 0.20 %}
+          {% if states('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat') | float < 0.20 %}
             green
-          {% elif states('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw') | float < 0.25 %}
+          {% elif states('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat') | float < 0.25 %}
             orange
           {% else %}
             red
@@ -44,7 +44,7 @@ cards:
       
       # Morgen laagste prijs
       - type: custom:mushroom-entity-card
-        entity: sensor.tibber_pulse_JOUW_ADRES_morgen_laagste_prijs
+        entity: sensor.tibber_pulse_JOUW_ADRES_tomorrow_lowest_price
         name: Morgen Laagst
         icon: mdi:arrow-down-circle
         icon_color: green
@@ -53,7 +53,7 @@ cards:
       
       # Morgen hoogste prijs
       - type: custom:mushroom-entity-card
-        entity: sensor.tibber_pulse_JOUW_ADRES_morgen_hoogste_prijs
+        entity: sensor.tibber_pulse_JOUW_ADRES_tomorrow_highest_price
         name: Morgen Hoogst
         icon: mdi:arrow-up-circle
         icon_color: red
@@ -112,7 +112,7 @@ cards:
       annotations:
         yaxis:
           # Gemiddelde lijn
-          - y: EVAL:hass.states['sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw'].attributes.price_info_summary?.stats?.today_avg || 0
+          - y: EVAL:hass.states['sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat'].attributes.price_info_summary?.stats?.today_avg || 0
             borderColor: '#00E396'
             strokeDashArray: 5
             label:
@@ -121,7 +121,7 @@ cards:
                 background: '#00E396'
     
     series:
-      - entity: sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw
+      - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
         name: Stroomprijs
         type: area
         color: '#2196F3'
@@ -190,7 +190,7 @@ cards:
                 background: '#775DD0'
         yaxis:
           # Vandaag gemiddelde
-          - y: EVAL:hass.states['sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw'].attributes.price_info_summary?.stats?.today_avg || 0
+          - y: EVAL:hass.states['sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat'].attributes.price_info_summary?.stats?.today_avg || 0
             borderColor: '#00E396'
             strokeDashArray: 5
             label:
@@ -198,7 +198,7 @@ cards:
               style:
                 background: '#00E396'
           # Morgen gemiddelde
-          - y: EVAL:hass.states['sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw'].attributes.price_info_summary?.stats?.tomorrow_avg || 0
+          - y: EVAL:hass.states['sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat'].attributes.price_info_summary?.stats?.tomorrow_avg || 0
             borderColor: '#FEB019'
             strokeDashArray: 5
             label:
@@ -208,7 +208,7 @@ cards:
     
     series:
       # Vandaag prijzen
-      - entity: sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw
+      - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
         name: Vandaag
         type: column
         color: '#2196F3'
@@ -219,7 +219,7 @@ cards:
           }) || [];
       
       # Morgen prijzen
-      - entity: sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw
+      - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
         name: Morgen
         type: column
         color: '#FF9800'
@@ -237,7 +237,7 @@ cards:
         stroke_width: 0
         data_generator: |
           const heatingHours = entity.attributes.cheapest_hours || [];
-          const priceData = hass.states['sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw'].attributes.price_info_summary;
+          const priceData = hass.states['sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat'].attributes.price_info_summary;
           const allPrices = [...(priceData?.today_all || []), ...(priceData?.tomorrow_all || [])];
           
           return heatingHours.map(timestamp => {
@@ -259,9 +259,9 @@ cards:
       - type: custom:mushroom-template-card
         primary: Vandaag
         secondary: |
-          Min: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.today_min | float(0) | round(4) }}
-          Max: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.today_max | float(0) | round(4) }}
-          Ø: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.today_avg | float(0) | round(4) }}
+          Min: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.today_min | float(0) | round(4) }}
+          Max: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.today_max | float(0) | round(4) }}
+          Ø: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.today_avg | float(0) | round(4) }}
         icon: mdi:calendar-today
         icon_color: blue
       
@@ -269,10 +269,10 @@ cards:
       - type: custom:mushroom-template-card
         primary: Morgen
         secondary: |
-          {% if state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_available %}
-          Min: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_min | float(0) | round(4) }}
-          Max: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_max | float(0) | round(4) }}
-          Ø: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_avg | float(0) | round(4) }}
+          {% if state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_available %}
+          Min: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_min | float(0) | round(4) }}
+          Max: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_max | float(0) | round(4) }}
+          Ø: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_avg | float(0) | round(4) }}
           {% else %}
           Nog niet beschikbaar
           {% endif %}
@@ -286,7 +286,7 @@ cards:
     primary: "🌊 Jacuzzi Planning"
     secondary: |
       {% if state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'heating_now') %}
-      ✅ Nu aan het verwarmen! (€{{ states('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw') }}/kWh)
+      ✅ Nu aan het verwarmen! (€{{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat') }}/kWh)
       {% else %}
       Volgende verwarmingsuren: {{ state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'start_times') }}
       {% endif %}
@@ -336,7 +336,7 @@ cards:
     now:
       show: true
     series:
-      - entity: sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw
+      - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
         name: Prijs
         data_generator: |
           return entity.attributes.price_info_summary?.next_24h?.map((entry) => {
@@ -349,13 +349,13 @@ cards:
     square: false
     cards:
       - type: entity
-        entity: sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw
+        entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
         name: Nu
       - type: entity
-        entity: sensor.tibber_pulse_JOUW_ADRES_morgen_laagste_prijs
+        entity: sensor.tibber_pulse_JOUW_ADRES_tomorrow_lowest_price
         name: Morgen Min
       - type: entity
-        entity: sensor.tibber_pulse_JOUW_ADRES_morgen_gemiddelde_prijs
+        entity: sensor.tibber_pulse_JOUW_ADRES_tomorrow_average_price
         name: Morgen Ø
       - type: entity
         entity: sensor.jacuzzi_verwarmingsbesparing
@@ -366,7 +366,7 @@ cards:
 # ================================================================================
 #
 # Grafieken tonen geen data:
-# 1. Check of sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw bestaat
+# 1. Check of sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat bestaat
 # 2. Developer Tools → States → zoek sensor en check attributes
 # 3. Controleer of price_info_summary.next_24h data bevat
 # 4. Wacht tot Tibber prijzen heeft opgehaald (kan 1-2 min duren na herstart)
@@ -381,3 +381,4 @@ cards:
 # - Check browser console (F12) voor specifieke errors
 #
 # ================================================================================
+
