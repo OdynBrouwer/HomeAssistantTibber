@@ -110,6 +110,30 @@
         "name": "Tomorrow average price",
         "state": "Average electricity price for tomorrow (total incl. VAT)"
       },
+      "electricity_spotprice_today_min": {
+        "name": "Today minimum spotprice",
+        "state": "Lowest spotprice for today (excl. surcharges, for solar feed-in)"
+      },
+      "electricity_spotprice_today_max": {
+        "name": "Today maximum spotprice",
+        "state": "Highest spotprice for today (excl. surcharges, for solar feed-in)"
+      },
+      "electricity_spotprice_today_avg": {
+        "name": "Today average spotprice",
+        "state": "Average spotprice for today (excl. surcharges, for solar feed-in)"
+      },
+      "electricity_spotprice_tomorrow_min": {
+        "name": "Tomorrow minimum spotprice",
+        "state": "Lowest spotprice for tomorrow (excl. surcharges, for solar feed-in)"
+      },
+      "electricity_spotprice_tomorrow_max": {
+        "name": "Tomorrow maximum spotprice",
+        "state": "Highest spotprice for tomorrow (excl. surcharges, for solar feed-in)"
+      },
+      "electricity_spotprice_tomorrow_avg": {
+        "name": "Tomorrow average spotprice",
+        "state": "Average spotprice for tomorrow (excl. surcharges, for solar feed-in)"
+      },
       "average_power": {
         "name": "Average power"
       },

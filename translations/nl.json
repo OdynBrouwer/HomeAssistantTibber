@@ -177,6 +177,30 @@
                 "name": "Morgen gemiddelde prijs",
                 "state": "Gemiddelde stroomprijs voor morgen (totaal incl. BTW)"
             },
+            "electricity_spotprice_today_min": {
+                "name": "Vandaag laagste spotprijs",
+                "state": "Laagste spotprijs voor vandaag (excl. toeslagen, voor teruglevering)"
+            },
+            "electricity_spotprice_today_max": {
+                "name": "Vandaag hoogste spotprijs",
+                "state": "Hoogste spotprijs voor vandaag (excl. toeslagen, voor teruglevering)"
+            },
+            "electricity_spotprice_today_avg": {
+                "name": "Vandaag gemiddelde spotprijs",
+                "state": "Gemiddelde spotprijs voor vandaag (excl. toeslagen, voor teruglevering)"
+            },
+            "electricity_spotprice_tomorrow_min": {
+                "name": "Morgen laagste spotprijs",
+                "state": "Laagste spotprijs voor morgen (excl. toeslagen, voor teruglevering)"
+            },
+            "electricity_spotprice_tomorrow_max": {
+                "name": "Morgen hoogste spotprijs",
+                "state": "Hoogste spotprijs voor morgen (excl. toeslagen, voor teruglevering)"
+            },
+            "electricity_spotprice_tomorrow_avg": {
+                "name": "Morgen gemiddelde spotprijs",
+                "state": "Gemiddelde spotprijs voor morgen (excl. toeslagen, voor teruglevering)"
+            },
             "power": {
                 "name": "Vermogen"
             },

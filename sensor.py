@@ -485,6 +485,56 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         icon=ICON,
         suggested_display_precision=4,
     ),
+    
+    # Spotprice sensors for solar feed-in (post-2027 saldering)
+    TibberSensorEntityDescription(
+        key="electricity_spotprice_today_min",
+        translation_key="electricity_spotprice_today_min",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
+    TibberSensorEntityDescription(
+        key="electricity_spotprice_today_max",
+        translation_key="electricity_spotprice_today_max",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
+    TibberSensorEntityDescription(
+        key="electricity_spotprice_today_avg",
+        translation_key="electricity_spotprice_today_avg",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
+    TibberSensorEntityDescription(
+        key="electricity_spotprice_tomorrow_min",
+        translation_key="electricity_spotprice_tomorrow_min",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
+    TibberSensorEntityDescription(
+        key="electricity_spotprice_tomorrow_max",
+        translation_key="electricity_spotprice_tomorrow_max",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
+    TibberSensorEntityDescription(
+        key="electricity_spotprice_tomorrow_avg",
+        translation_key="electricity_spotprice_tomorrow_avg",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
 
 )
 

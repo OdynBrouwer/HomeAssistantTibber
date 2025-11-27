@@ -785,6 +785,121 @@ class TibberHome:
                     tomorrow_prices.append(price)
         
         return sum(tomorrow_prices) / len(tomorrow_prices) if tomorrow_prices else None
+    
+    # Spotprice sensors (for solar feed-in post-2027)
+    @property
+    def electricity_spotprice_today_min(self) -> float | None:
+        """Get minimum spotprice for today (excl. surcharges)."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + dt.timedelta(days=1)
+        
+        today_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if today_start <= ts < today_end:
+                price = entry.get("energy")  # Spotprice without surcharges
+                if price is not None:
+                    today_prices.append(price)
+        
+        return min(today_prices) if today_prices else None
+    
+    @property
+    def electricity_spotprice_today_max(self) -> float | None:
+        """Get maximum spotprice for today (excl. surcharges)."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + dt.timedelta(days=1)
+        
+        today_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if today_start <= ts < today_end:
+                price = entry.get("energy")
+                if price is not None:
+                    today_prices.append(price)
+        
+        return max(today_prices) if today_prices else None
+    
+    @property
+    def electricity_spotprice_today_avg(self) -> float | None:
+        """Get average spotprice for today (excl. surcharges)."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + dt.timedelta(days=1)
+        
+        today_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if today_start <= ts < today_end:
+                price = entry.get("energy")
+                if price is not None:
+                    today_prices.append(price)
+        
+        return sum(today_prices) / len(today_prices) if today_prices else None
+    
+    @property
+    def electricity_spotprice_tomorrow_min(self) -> float | None:
+        """Get minimum spotprice for tomorrow (excl. surcharges)."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        tomorrow_start = now.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
+        tomorrow_end = tomorrow_start + dt.timedelta(days=1)
+        
+        tomorrow_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if tomorrow_start <= ts < tomorrow_end:
+                price = entry.get("energy")
+                if price is not None:
+                    tomorrow_prices.append(price)
+        
+        return min(tomorrow_prices) if tomorrow_prices else None
+    
+    @property
+    def electricity_spotprice_tomorrow_max(self) -> float | None:
+        """Get maximum spotprice for tomorrow (excl. surcharges)."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        tomorrow_start = now.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
+        tomorrow_end = tomorrow_start + dt.timedelta(days=1)
+        
+        tomorrow_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if tomorrow_start <= ts < tomorrow_end:
+                price = entry.get("energy")
+                if price is not None:
+                    tomorrow_prices.append(price)
+        
+        return max(tomorrow_prices) if tomorrow_prices else None
+    
+    @property
+    def electricity_spotprice_tomorrow_avg(self) -> float | None:
+        """Get average spotprice for tomorrow (excl. surcharges)."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        tomorrow_start = now.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
+        tomorrow_end = tomorrow_start + dt.timedelta(days=1)
+        
+        tomorrow_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if tomorrow_start <= ts < tomorrow_end:
+                price = entry.get("energy")
+                if price is not None:
+                    tomorrow_prices.append(price)
+        
+        return sum(tomorrow_prices) / len(tomorrow_prices) if tomorrow_prices else None
 
     def current_price_rank(self, price_total: list[dict[str, float]], price_time: dt.datetime | None) -> float | None:
         """Get normalized rank (0-1) of current price compared to other prices today.
