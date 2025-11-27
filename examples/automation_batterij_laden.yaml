@@ -14,7 +14,7 @@ description: "Start batterij opladen wanneer je betaald wordt om stroom te gebru
 
 trigger:
   - platform: numeric_state
-    entity_id: sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
+    entity_id: sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten
     below: 0
     # Trigger wanneer spotprijs negatief wordt
 
@@ -63,7 +63,7 @@ description: "Stop batterij opladen wanneer de prijs weer positief wordt"
 
 trigger:
   - platform: numeric_state
-    entity_id: sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
+    entity_id: sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten
     above: 0
     # Trigger wanneer spotprijs positief wordt
 
@@ -87,7 +87,7 @@ action:
       message: >
         🕒 Tijd: {{ now().strftime('%d-%m-%Y %H:%M:%S') }}
         
-        💰 Spotprijs: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') }} €/kWh
+        💰 Spotprijs: {{ states('sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten') }} €/kWh
         🔋 Batterij: {{ states('sensor.battery_soc') }}%
         
         ℹ️ De prijs is weer positief.

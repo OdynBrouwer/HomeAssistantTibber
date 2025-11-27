@@ -24,18 +24,18 @@ template:
         state_class: measurement
         icon: mdi:solar-power
         state: >
-          {% set spotprijs = states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) %}
-          {% set eb_incl = states('sensor.tibber_pulse_JOUW_ADRES_electricity_energy_tax_incl_vat') | float(0) %}
+          {% set spotprijs = states('sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten') | float(0) %}
+          {% set eb_incl = states('sensor.tibber_pulse_JOUW_ADRES_energiebelasting_incl_btw') | float(0) %}
           {{ ((spotprijs * 1.21) + eb_incl) | round(4) }}
         availability: >
-          {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') not in ['unavailable', 'unknown', 'none'] }}
+          {{ states('sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten') not in ['unavailable', 'unknown', 'none'] }}
         attributes:
           spotprijs: >
-            {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) }}
+            {{ states('sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten') | float(0) }}
           spotprijs_incl_btw: >
-            {{ (states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) * 1.21) | round(4) }}
+            {{ (states('sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten') | float(0) * 1.21) | round(4) }}
           eb_refund: >
-            {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_energy_tax_incl_vat') | float(0) }}
+            {{ states('sensor.tibber_pulse_JOUW_ADRES_energiebelasting_incl_btw') | float(0) }}
           geldig_tot: "2026-12-31"
           toelichting: "Spotprijs × 1.21 + energiebelasting terugbetaling (dynamisch)"
 
@@ -54,15 +54,15 @@ template:
 #         state_class: measurement
 #         icon: mdi:solar-power
 #         state: >
-#           {% set spotprijs = states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) %}
+#           {% set spotprijs = states('sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten') | float(0) %}
 #           {{ spotprijs | round(4) }}
 #         availability: >
-#           {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') not in ['unavailable', 'unknown', 'none'] }}
+#           {{ states('sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten') not in ['unavailable', 'unknown', 'none'] }}
 #         attributes:
 #           spotprijs: >
-#             {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) }}
+#             {{ states('sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten') | float(0) }}
 #           spotprijs_incl_btw: >
-#             {{ (states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') | float(0) * 1.21) | round(4) }}
+#             {{ (states('sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten') | float(0) * 1.21) | round(4) }}
 #           eb_refund: 0.0
 #           geldig_vanaf: "2027-01-01"
 #           toelichting: "Alleen spotprijs EXCL BTW (geen energiebelasting, geen BTW meer)"

@@ -54,7 +54,7 @@ template:
         attributes:
           # Alle prijzen voor next_24h ophalen
           all_prices: >
-            {% set prices = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary') %}
+            {% set prices = state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary') %}
             {% if prices and prices.next_24h %}
               {{ prices.next_24h | map(attribute='total') | list }}
             {% else %}
@@ -63,7 +63,7 @@ template:
           
           # Timestamps van de goedkoopste uren
           cheapest_hours: >
-            {% set prices = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary') %}
+            {% set prices = state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary') %}
             {% set hours_needed = states('input_number.jacuzzi_heating_hours') | int %}
             {% if prices and prices.next_24h %}
               {# Sorteer op prijs en pak eerste N uren #}
@@ -75,7 +75,7 @@ template:
           
           # Start tijden in leesbaar formaat
           start_times: >
-            {% set prices = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary') %}
+            {% set prices = state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary') %}
             {% set hours_needed = states('input_number.jacuzzi_heating_hours') | int %}
             {% if prices and prices.next_24h %}
               {% set sorted_prices = prices.next_24h | sort(attribute='total') %}
@@ -90,7 +90,7 @@ template:
           
           # Gemiddelde prijs tijdens verwarmen
           avg_heating_price: >
-            {% set prices = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary') %}
+            {% set prices = state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary') %}
             {% set hours_needed = states('input_number.jacuzzi_heating_hours') | int %}
             {% if prices and prices.next_24h %}
               {% set sorted_prices = prices.next_24h | sort(attribute='total') %}
@@ -102,7 +102,7 @@ template:
           
           # Is het nu een goedkoop uur?
           heating_now: >
-            {% set prices = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary') %}
+            {% set prices = state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary') %}
             {% set hours_needed = states('input_number.jacuzzi_heating_hours') | int %}
             {% if prices and prices.next_24h %}
               {% set sorted_prices = prices.next_24h | sort(attribute='total') %}
@@ -128,7 +128,7 @@ template:
         unit_of_measurement: "EUR"
         device_class: monetary
         state: >
-          {% set stats = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats %}
+          {% set stats = state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats %}
           {% set avg_price = state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'avg_heating_price') | float(0) %}
           {% set hours = states('input_number.jacuzzi_heating_hours') | int %}
           {% set kwh_per_hour = 3.0 %}  {# Pas aan voor jouw jacuzzi vermogen #}
@@ -140,7 +140,7 @@ template:
           {% endif %}
         attributes:
           explanation: >
-            {% set stats = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats %}
+            {% set stats = state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats %}
             {% set avg_price = state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'avg_heating_price') | float(0) %}
             {% if stats and stats.today_avg %}
               Normaal: €{{ stats.today_avg | round(4) }}/kWh vs Slim: €{{ avg_price | round(4) }}/kWh
@@ -195,7 +195,7 @@ automation:
         data:
           title: "🌊 Jacuzzi Verwarming Gestart"
           message: >
-            Slimme verwarming actief! Goedkope stroom: €{{ states('sensor.electricity_price_total_incl_vat') }}/kWh.
+            Slimme verwarming actief! Goedkope stroom: €{{ states('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw') }}/kWh.
             Klaar rond {{ state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'start_times').split(', ')[-1] }}.
           data:
             notification_icon: mdi:hot-tub
@@ -265,7 +265,7 @@ automation:
       # Alleen als morgen prijzen beschikbaar zijn
       - condition: template
         value_template: >
-          {{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_available == true }}
+          {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_available == true }}
     
     action:
       - service: notify.mobile_app_je_telefoon
@@ -275,9 +275,9 @@ automation:
             Beste verwarmingstijden morgen: {{ state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'start_times') }}.
             
             Prijzen morgen:
-            • Laagst: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_min }}
-            • Hoogst: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_max }}
-            • Gemiddeld: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_avg }}
+            • Laagst: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_min }}
+            • Hoogst: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_max }}
+            • Gemiddeld: €{{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_avg }}
 
 # ================================================================================
 # AANPASSINGEN VOOR JOUW SITUATIE

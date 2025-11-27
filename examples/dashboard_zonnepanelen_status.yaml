@@ -27,7 +27,7 @@ state_color: true
 
 entities:
   # Spotprijs van Nord Pool (basis voor berekeningen)
-  - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
+  - entity: sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten
     name: "Spotprijs (Nord Pool)"
     icon: mdi:chart-line
     secondary_info: last-changed
@@ -39,7 +39,7 @@ entities:
     secondary_info: last-changed
   
   # Verbruiksprijs (wat je betaalt als je stroom gebruikt)
-  - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
+  - entity: sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw
     name: "⚡ Verbruiksprijs"
     icon: mdi:lightning-bolt
     secondary_info: last-changed
