@@ -665,7 +665,8 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"])
 
 
 
-        self._device_name = self._home_name
+        self._model = "Tibber Pulse"
+        self._device_name = f"{self._model} {self._home_name}"
 
     @property
     def native_value(self) -> StateType:
