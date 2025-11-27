@@ -44,7 +44,7 @@ cards:
       
       # Morgen laagste prijs
       - type: custom:mushroom-entity-card
-        entity: sensor.tibber_pulse_JOUW_ADRES_tomorrow_lowest_price
+        entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_tomorrow_min
         name: Morgen Laagst
         icon: mdi:arrow-down-circle
         icon_color: green
@@ -53,7 +53,7 @@ cards:
       
       # Morgen hoogste prijs
       - type: custom:mushroom-entity-card
-        entity: sensor.tibber_pulse_JOUW_ADRES_tomorrow_highest_price
+        entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_tomorrow_max
         name: Morgen Hoogst
         icon: mdi:arrow-up-circle
         icon_color: red
@@ -352,10 +352,10 @@ cards:
         entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
         name: Nu
       - type: entity
-        entity: sensor.tibber_pulse_JOUW_ADRES_tomorrow_lowest_price
+        entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_tomorrow_min
         name: Morgen Min
       - type: entity
-        entity: sensor.tibber_pulse_JOUW_ADRES_tomorrow_average_price
+        entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_tomorrow_avg
         name: Morgen Ø
       - type: entity
         entity: sensor.jacuzzi_verwarmingsbesparing
@@ -381,4 +381,5 @@ cards:
 # - Check browser console (F12) voor specifieke errors
 #
 # ================================================================================
+
 
