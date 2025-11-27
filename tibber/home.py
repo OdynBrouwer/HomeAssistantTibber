@@ -671,6 +671,63 @@ class TibberHome:
             _LOGGER.error("Could not find price_unit.")
             return ""
         return self.currency + "/" + self.consumption_unit
+    
+    @property
+    def electricity_price_tomorrow_min(self) -> float | None:
+        """Get minimum price for tomorrow."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        tomorrow_start = now.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
+        tomorrow_end = tomorrow_start + dt.timedelta(days=1)
+        
+        tomorrow_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if tomorrow_start <= ts < tomorrow_end:
+                price = entry.get("total")
+                if price is not None:
+                    tomorrow_prices.append(price)
+        
+        return min(tomorrow_prices) if tomorrow_prices else None
+    
+    @property
+    def electricity_price_tomorrow_max(self) -> float | None:
+        """Get maximum price for tomorrow."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        tomorrow_start = now.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
+        tomorrow_end = tomorrow_start + dt.timedelta(days=1)
+        
+        tomorrow_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if tomorrow_start <= ts < tomorrow_end:
+                price = entry.get("total")
+                if price is not None:
+                    tomorrow_prices.append(price)
+        
+        return max(tomorrow_prices) if tomorrow_prices else None
+    
+    @property
+    def electricity_price_tomorrow_avg(self) -> float | None:
+        """Get average price for tomorrow."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        tomorrow_start = now.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
+        tomorrow_end = tomorrow_start + dt.timedelta(days=1)
+        
+        tomorrow_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if tomorrow_start <= ts < tomorrow_end:
+                price = entry.get("total")
+                if price is not None:
+                    tomorrow_prices.append(price)
+        
+        return sum(tomorrow_prices) / len(tomorrow_prices) if tomorrow_prices else None
 
     def current_price_rank(self, price_total: list[dict[str, float]], price_time: dt.datetime | None) -> float | None:
         """Get normalized rank (0-1) of current price compared to other prices today.

@@ -433,6 +433,32 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="last_price_update",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
+    
+    # Tomorrow price sensors
+    TibberSensorEntityDescription(
+        key="electricity_price_tomorrow_min",
+        translation_key="electricity_price_tomorrow_min",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
+    TibberSensorEntityDescription(
+        key="electricity_price_tomorrow_max",
+        translation_key="electricity_price_tomorrow_max",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
+    TibberSensorEntityDescription(
+        key="electricity_price_tomorrow_avg",
+        translation_key="electricity_price_tomorrow_avg",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
 
 )
 
@@ -712,6 +738,93 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"])
                 upcoming = []
 
             summary["upcoming"] = upcoming
+
+            # Collect full today, tomorrow, next_24h and next_48h data for graphs
+            today_all: list[dict[str, Any]] = []
+            tomorrow_all: list[dict[str, Any]] = []
+            next_24h: list[dict[str, Any]] = []
+            next_48h: list[dict[str, Any]] = []
+            
+            try:
+                now = dt_util.now().astimezone(self._tibber_home._tibber_control.time_zone)
+                today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                tomorrow_start = today_start + datetime.timedelta(days=1)
+                tomorrow_end = tomorrow_start + datetime.timedelta(days=1)
+                next_24h_end = now + datetime.timedelta(hours=24)
+                next_48h_end = now + datetime.timedelta(hours=48)
+                
+                # Sort all price entries by timestamp
+                all_entries: list[tuple[datetime.datetime, str]] = []
+                for startsAt, entry in (getattr(self._tibber_home, "_price_info", {}) or {}).items():
+                    ts = entry.get("timestamp")
+                    if not isinstance(ts, datetime.datetime):
+                        continue
+                    all_entries.append((ts, startsAt))
+                all_entries.sort()
+                
+                # Collect prices and calculate stats
+                today_prices: list[float] = []
+                tomorrow_prices: list[float] = []
+                
+                for ts, startsAt in all_entries:
+                    entry = self._tibber_home._price_info.get(startsAt, {})
+                    price_data = {
+                        "startsAt": startsAt,
+                        "total": entry.get("total"),
+                        "energy": entry.get("energy"),
+                        "tax": entry.get("tax"),
+                        "level": self._tibber_home.price_level.get(startsAt),
+                    }
+                    
+                    # Today entries
+                    if today_start <= ts < tomorrow_start:
+                        today_all.append(price_data)
+                        if entry.get("total") is not None:
+                            today_prices.append(entry.get("total"))
+                    
+                    # Tomorrow entries
+                    elif tomorrow_start <= ts < tomorrow_end:
+                        tomorrow_all.append(price_data)
+                        if entry.get("total") is not None:
+                            tomorrow_prices.append(entry.get("total"))
+                    
+                    # Next 24h (rolling window from now)
+                    if now <= ts < next_24h_end:
+                        next_24h.append(price_data)
+                    
+                    # Next 48h (rolling window from now)
+                    if now <= ts < next_48h_end:
+                        next_48h.append(price_data)
+                
+                # Add statistics
+                stats: dict[str, Any] = {}
+                if today_prices:
+                    stats["today_min"] = round(min(today_prices), 5)
+                    stats["today_max"] = round(max(today_prices), 5)
+                    stats["today_avg"] = round(sum(today_prices) / len(today_prices), 5)
+                
+                if tomorrow_prices:
+                    stats["tomorrow_min"] = round(min(tomorrow_prices), 5)
+                    stats["tomorrow_max"] = round(max(tomorrow_prices), 5)
+                    stats["tomorrow_avg"] = round(sum(tomorrow_prices) / len(tomorrow_prices), 5)
+                    stats["tomorrow_available"] = True
+                else:
+                    stats["tomorrow_available"] = False
+                
+                summary["stats"] = stats
+                
+            except Exception as e:
+                _LOGGER.debug("Error building extended price data: %s", e)
+                today_all = []
+                tomorrow_all = []
+                next_24h = []
+                next_48h = []
+                summary["stats"] = {}
+            
+            summary["today_all"] = today_all
+            summary["tomorrow_all"] = tomorrow_all
+            summary["next_24h"] = next_24h
+            summary["next_48h"] = next_48h
 
             # attach compact summary (not the full price_info dict)
             # merge into existing attributes dict (avoid item assignment typing issues)

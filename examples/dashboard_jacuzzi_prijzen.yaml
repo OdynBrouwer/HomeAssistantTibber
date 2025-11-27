@@ -1,0 +1,383 @@
+# ================================================================================
+# JACUZZI DASHBOARD - 24/48 UUR PRIJSGRAFIEKEN
+# ================================================================================
+#
+# Complete dashboard voor jacuzzi verwarming met:
+# - 24-uurs vooruitkijkende prijsgrafiek
+# - 48-uurs overzicht (vandaag + morgen)
+# - Statistieken en planning informatie
+# - Status kaarten
+#
+# VEREISTEN:
+# - ApexCharts Card: https://github.com/RomRider/apexcharts-card
+#   Installeer via HACS → Frontend → ApexCharts Card
+# - Mushroom Cards (optioneel voor mooie UI)
+# - Auto Entities Card (optioneel)
+#
+# ================================================================================
+
+# ================================================================================
+# VOLLEDIGE DASHBOARD LAYOUT
+# ================================================================================
+type: vertical-stack
+cards:
+  # ----------------------------------------------------------------------------
+  # HEADER KAART - Huidige Status
+  # ----------------------------------------------------------------------------
+  - type: horizontal-stack
+    cards:
+      # Huidige prijs
+      - type: custom:mushroom-entity-card
+        entity: sensor.electricity_price_total_incl_vat
+        name: Huidige Stroomprijs
+        icon: mdi:lightning-bolt
+        icon_color: >
+          {% if states('sensor.electricity_price_total_incl_vat') | float < 0.20 %}
+            green
+          {% elif states('sensor.electricity_price_total_incl_vat') | float < 0.25 %}
+            orange
+          {% else %}
+            red
+          {% endif %}
+        tap_action:
+          action: more-info
+      
+      # Morgen laagste prijs
+      - type: custom:mushroom-entity-card
+        entity: sensor.electricity_price_tomorrow_min
+        name: Morgen Laagst
+        icon: mdi:arrow-down-circle
+        icon_color: green
+        tap_action:
+          action: more-info
+      
+      # Morgen hoogste prijs
+      - type: custom:mushroom-entity-card
+        entity: sensor.electricity_price_tomorrow_max
+        name: Morgen Hoogst
+        icon: mdi:arrow-up-circle
+        icon_color: red
+        tap_action:
+          action: more-info
+      
+      # Jacuzzi status
+      - type: custom:mushroom-entity-card
+        entity: input_boolean.jacuzzi_smart_heating
+        name: Slimme Verwarming
+        icon: mdi:hot-tub
+        tap_action:
+          action: toggle
+
+  # ----------------------------------------------------------------------------
+  # GRAFIEK 1: 24-UURS VOORUITKIJKEND (Rolling Window)
+  # ----------------------------------------------------------------------------
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "⚡ Stroomprijzen Komende 24 Uur"
+      show_states: true
+      colorize_states: true
+    
+    graph_span: 24h
+    span:
+      start: minute
+    
+    now:
+      show: true
+      label: NU
+      color: '#FF5722'
+    
+    apex_config:
+      chart:
+        height: 300px
+      xaxis:
+        labels:
+          format: HH:mm
+      yaxis:
+        - decimalsInFloat: 4
+          min: 0
+          labels:
+            formatter: |
+              EVAL:function(value) {
+                return '€' + value.toFixed(4);
+              }
+      tooltip:
+        x:
+          format: 'ddd HH:mm'
+        y:
+          formatter: |
+            EVAL:function(value) {
+              return '€' + value.toFixed(4) + '/kWh';
+            }
+      annotations:
+        yaxis:
+          # Gemiddelde lijn
+          - y: EVAL:hass.states['sensor.electricity_price_total_incl_vat'].attributes.price_info_summary?.stats?.today_avg || 0
+            borderColor: '#00E396'
+            strokeDashArray: 5
+            label:
+              text: 'Gemiddeld vandaag'
+              style:
+                background: '#00E396'
+    
+    series:
+      - entity: sensor.electricity_price_total_incl_vat
+        name: Stroomprijs
+        type: area
+        color: '#2196F3'
+        opacity: 0.3
+        stroke_width: 2
+        curve: stepline
+        data_generator: |
+          return entity.attributes.price_info_summary?.next_24h?.map((entry) => {
+            return [new Date(entry.startsAt).getTime(), entry.total];
+          }) || [];
+        show:
+          extremas: true
+          in_header: true
+
+  # ----------------------------------------------------------------------------
+  # GRAFIEK 2: 48-UURS OVERZICHT (Vandaag + Morgen)
+  # ----------------------------------------------------------------------------
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "📊 Prijzen Vandaag & Morgen (48u)"
+      show_states: true
+    
+    graph_span: 48h
+    span:
+      start: day
+    
+    now:
+      show: true
+      label: NU
+      color: '#FF5722'
+    
+    apex_config:
+      chart:
+        height: 350px
+      xaxis:
+        labels:
+          format: 'ddd HH:mm'
+          rotate: -45
+      yaxis:
+        - decimalsInFloat: 4
+          min: 0
+          labels:
+            formatter: |
+              EVAL:function(value) {
+                return '€' + value.toFixed(4);
+              }
+      tooltip:
+        x:
+          format: 'ddd HH:mm'
+        y:
+          formatter: |
+            EVAL:function(value) {
+              return '€' + value.toFixed(4) + '/kWh';
+            }
+      annotations:
+        xaxis:
+          # Middernacht lijn (overgang naar morgen)
+          - x: EVAL:new Date().setHours(24,0,0,0)
+            borderColor: '#775DD0'
+            strokeDashArray: 3
+            label:
+              text: 'Morgen'
+              orientation: 'horizontal'
+              style:
+                background: '#775DD0'
+        yaxis:
+          # Vandaag gemiddelde
+          - y: EVAL:hass.states['sensor.electricity_price_total_incl_vat'].attributes.price_info_summary?.stats?.today_avg || 0
+            borderColor: '#00E396'
+            strokeDashArray: 5
+            label:
+              text: 'Ø Vandaag'
+              style:
+                background: '#00E396'
+          # Morgen gemiddelde
+          - y: EVAL:hass.states['sensor.electricity_price_total_incl_vat'].attributes.price_info_summary?.stats?.tomorrow_avg || 0
+            borderColor: '#FEB019'
+            strokeDashArray: 5
+            label:
+              text: 'Ø Morgen'
+              style:
+                background: '#FEB019'
+    
+    series:
+      # Vandaag prijzen
+      - entity: sensor.electricity_price_total_incl_vat
+        name: Vandaag
+        type: column
+        color: '#2196F3'
+        opacity: 0.7
+        data_generator: |
+          return entity.attributes.price_info_summary?.today_all?.map((entry) => {
+            return [new Date(entry.startsAt).getTime(), entry.total];
+          }) || [];
+      
+      # Morgen prijzen
+      - entity: sensor.electricity_price_total_incl_vat
+        name: Morgen
+        type: column
+        color: '#FF9800'
+        opacity: 0.7
+        data_generator: |
+          return entity.attributes.price_info_summary?.tomorrow_all?.map((entry) => {
+            return [new Date(entry.startsAt).getTime(), entry.total];
+          }) || [];
+      
+      # Beste verwarmingsuren (markers)
+      - entity: sensor.jacuzzi_beste_verwarmingsuren
+        name: Verwarmingsuren
+        type: scatter
+        color: '#4CAF50'
+        stroke_width: 0
+        data_generator: |
+          const heatingHours = entity.attributes.cheapest_hours || [];
+          const priceData = hass.states['sensor.electricity_price_total_incl_vat'].attributes.price_info_summary;
+          const allPrices = [...(priceData?.today_all || []), ...(priceData?.tomorrow_all || [])];
+          
+          return heatingHours.map(timestamp => {
+            const priceEntry = allPrices.find(p => p.startsAt === timestamp);
+            return [
+              new Date(timestamp).getTime(),
+              priceEntry?.total || 0
+            ];
+          });
+        show:
+          legend_value: false
+
+  # ----------------------------------------------------------------------------
+  # STATISTIEKEN KAARTEN
+  # ----------------------------------------------------------------------------
+  - type: horizontal-stack
+    cards:
+      # Vandaag stats
+      - type: custom:mushroom-template-card
+        primary: Vandaag
+        secondary: |
+          Min: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.today_min | float(0) | round(4) }}
+          Max: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.today_max | float(0) | round(4) }}
+          Ø: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.today_avg | float(0) | round(4) }}
+        icon: mdi:calendar-today
+        icon_color: blue
+      
+      # Morgen stats
+      - type: custom:mushroom-template-card
+        primary: Morgen
+        secondary: |
+          {% if state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_available %}
+          Min: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_min | float(0) | round(4) }}
+          Max: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_max | float(0) | round(4) }}
+          Ø: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_avg | float(0) | round(4) }}
+          {% else %}
+          Nog niet beschikbaar
+          {% endif %}
+        icon: mdi:calendar-clock
+        icon_color: orange
+
+  # ----------------------------------------------------------------------------
+  # JACUZZI PLANNING KAART
+  # ----------------------------------------------------------------------------
+  - type: custom:mushroom-template-card
+    primary: "🌊 Jacuzzi Planning"
+    secondary: |
+      {% if state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'heating_now') %}
+      ✅ Nu aan het verwarmen! (€{{ states('sensor.electricity_price_total_incl_vat') }}/kWh)
+      {% else %}
+      Volgende verwarmingsuren: {{ state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'start_times') }}
+      {% endif %}
+      
+      Besparing: €{{ states('sensor.jacuzzi_verwarmingsbesparing') }}
+    icon: mdi:hot-tub
+    icon_color: >
+      {% if state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'heating_now') %}
+      green
+      {% else %}
+      grey
+      {% endif %}
+    tap_action:
+      action: more-info
+      entity: sensor.jacuzzi_beste_verwarmingsuren
+
+  # ----------------------------------------------------------------------------
+  # INSTELLINGEN KAART
+  # ----------------------------------------------------------------------------
+  - type: entities
+    title: "⚙️ Jacuzzi Instellingen"
+    entities:
+      - entity: input_number.jacuzzi_heating_hours
+        name: Verwarmingsuren
+      - entity: input_number.jacuzzi_target_temp
+        name: Doeltemperatuur
+      - entity: input_boolean.jacuzzi_smart_heating
+        name: Slimme verwarming
+      - type: divider
+      - entity: climate.jacuzzi
+        name: Jacuzzi
+
+# ================================================================================
+# ALTERNATIEVE LAYOUT: COMPACTE VERSIE
+# ================================================================================
+# Voor mobiel of kleinere schermen:
+
+---
+type: vertical-stack
+cards:
+  # Alleen 24-uurs grafiek
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: "Komende 24 Uur"
+    graph_span: 24h
+    now:
+      show: true
+    series:
+      - entity: sensor.electricity_price_total_incl_vat
+        name: Prijs
+        data_generator: |
+          return entity.attributes.price_info_summary?.next_24h?.map((entry) => {
+            return [new Date(entry.startsAt).getTime(), entry.total];
+          }) || [];
+  
+  # Status grid
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: entity
+        entity: sensor.electricity_price_total_incl_vat
+        name: Nu
+      - type: entity
+        entity: sensor.electricity_price_tomorrow_min
+        name: Morgen Min
+      - type: entity
+        entity: sensor.electricity_price_tomorrow_avg
+        name: Morgen Ø
+      - type: entity
+        entity: sensor.jacuzzi_verwarmingsbesparing
+        name: Besparing
+
+# ================================================================================
+# TROUBLESHOOTING
+# ================================================================================
+#
+# Grafieken tonen geen data:
+# 1. Check of sensor.electricity_price_total_incl_vat bestaat
+# 2. Developer Tools → States → zoek sensor en check attributes
+# 3. Controleer of price_info_summary.next_24h data bevat
+# 4. Wacht tot Tibber prijzen heeft opgehaald (kan 1-2 min duren na herstart)
+#
+# "Morgen nog niet beschikbaar":
+# - Normale situatie voor 13:00 uur
+# - Tibber publiceert morgen prijzen rond 13:00-14:00
+#
+# ApexCharts errors:
+# - Clear browser cache
+# - Update ApexCharts via HACS
+# - Check browser console (F12) voor specifieke errors
+#
+# ================================================================================

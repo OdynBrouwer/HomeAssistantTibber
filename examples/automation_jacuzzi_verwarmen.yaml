@@ -1,0 +1,302 @@
+# ================================================================================
+# JACUZZI SLIMME VERWARMING - Verwarm op goedkoopste momenten
+# ================================================================================
+#
+# Dit automation systeem verwarmt je jacuzzi tijdens de X goedkoopste uren van
+# vandaag of morgen, zodat je profiteert van lage stroomprijzen.
+#
+# VEREISTEN:
+# - Tibber Advanced integratie geconfigureerd
+# - Jacuzzi met regelbare thermostaat (bijv. via climate entity of switch)
+# - Input helpers aangemaakt (zie configuratie hieronder)
+#
+# ================================================================================
+
+# ================================================================================
+# STAP 1: MAAK INPUT HELPERS AAN
+# ================================================================================
+# Ga naar: Instellingen → Apparaten & Services → Helpers → Helper Toevoegen
+#
+# 1. Input Number: "Jacuzzi Verwarmingsuren"
+#    - Naam: input_number.jacuzzi_heating_hours
+#    - Min: 1, Max: 8, Stap: 1
+#    - Eenheid: uur
+#    - Standaard: 4
+#
+# 2. Input Number: "Jacuzzi Doeltemperatuur"
+#    - Naam: input_number.jacuzzi_target_temp
+#    - Min: 35, Max: 40, Stap: 0.5
+#    - Eenheid: °C
+#    - Standaard: 38
+#
+# 3. Input Boolean: "Jacuzzi Slimme Verwarming"
+#    - Naam: input_boolean.jacuzzi_smart_heating
+#    - Standaard: aan
+#
+# 4. Input Datetime: "Jacuzzi Gewenste Tijd"
+#    - Naam: input_datetime.jacuzzi_ready_time
+#    - Type: Datum en tijd
+#    - Standaard: morgen 18:00
+#
+# ================================================================================
+
+# ================================================================================
+# STAP 2: MAAK TEMPLATE SENSORS AAN (configuration.yaml)
+# ================================================================================
+# Voeg dit toe aan je configuration.yaml of packages/jacuzzi.yaml:
+
+template:
+  - sensor:
+      # Vind de goedkoopste N uren in de komende 24 uur
+      - name: "Jacuzzi Beste Verwarmingsuren"
+        unique_id: jacuzzi_best_heating_hours
+        state: "{{ states('input_number.jacuzzi_heating_hours') | int }}"
+        attributes:
+          # Alle prijzen voor next_24h ophalen
+          all_prices: >
+            {% set prices = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary') %}
+            {% if prices and prices.next_24h %}
+              {{ prices.next_24h | map(attribute='total') | list }}
+            {% else %}
+              []
+            {% endif %}
+          
+          # Timestamps van de goedkoopste uren
+          cheapest_hours: >
+            {% set prices = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary') %}
+            {% set hours_needed = states('input_number.jacuzzi_heating_hours') | int %}
+            {% if prices and prices.next_24h %}
+              {# Sorteer op prijs en pak eerste N uren #}
+              {% set sorted_prices = prices.next_24h | sort(attribute='total') %}
+              {{ sorted_prices[:hours_needed] | map(attribute='startsAt') | list }}
+            {% else %}
+              []
+            {% endif %}
+          
+          # Start tijden in leesbaar formaat
+          start_times: >
+            {% set prices = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary') %}
+            {% set hours_needed = states('input_number.jacuzzi_heating_hours') | int %}
+            {% if prices and prices.next_24h %}
+              {% set sorted_prices = prices.next_24h | sort(attribute='total') %}
+              {% set times = [] %}
+              {% for entry in sorted_prices[:hours_needed] %}
+                {% set times = times + [as_timestamp(entry.startsAt) | timestamp_custom('%H:%M')] %}
+              {% endfor %}
+              {{ times | sort | join(', ') }}
+            {% else %}
+              Geen data
+            {% endif %}
+          
+          # Gemiddelde prijs tijdens verwarmen
+          avg_heating_price: >
+            {% set prices = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary') %}
+            {% set hours_needed = states('input_number.jacuzzi_heating_hours') | int %}
+            {% if prices and prices.next_24h %}
+              {% set sorted_prices = prices.next_24h | sort(attribute='total') %}
+              {% set total_price = sorted_prices[:hours_needed] | map(attribute='total') | sum %}
+              {{ (total_price / hours_needed) | round(4) }}
+            {% else %}
+              0
+            {% endif %}
+          
+          # Is het nu een goedkoop uur?
+          heating_now: >
+            {% set prices = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary') %}
+            {% set hours_needed = states('input_number.jacuzzi_heating_hours') | int %}
+            {% if prices and prices.next_24h %}
+              {% set sorted_prices = prices.next_24h | sort(attribute='total') %}
+              {% set cheapest_times = sorted_prices[:hours_needed] | map(attribute='startsAt') | list %}
+              {% set now_str = now().isoformat() %}
+              {% set current_quarter = none %}
+              {# Zoek huidige kwartier #}
+              {% for entry in prices.next_24h %}
+                {% set start = as_timestamp(entry.startsAt) %}
+                {% set end = start + 900 %}
+                {% if as_timestamp(now()) >= start and as_timestamp(now()) < end %}
+                  {% set current_quarter = entry.startsAt %}
+                {% endif %}
+              {% endfor %}
+              {{ current_quarter in cheapest_times }}
+            {% else %}
+              false
+            {% endif %}
+
+      # Sensor die laat zien hoeveel je bespaart
+      - name: "Jacuzzi Verwarmingsbesparing"
+        unique_id: jacuzzi_heating_savings
+        unit_of_measurement: "EUR"
+        device_class: monetary
+        state: >
+          {% set stats = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats %}
+          {% set avg_price = state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'avg_heating_price') | float(0) %}
+          {% set hours = states('input_number.jacuzzi_heating_hours') | int %}
+          {% set kwh_per_hour = 3.0 %}  {# Pas aan voor jouw jacuzzi vermogen #}
+          {% if stats and stats.today_avg %}
+            {# Besparing = (gemiddelde prijs - goedkope prijs) × kWh #}
+            {{ ((stats.today_avg - avg_price) * hours * kwh_per_hour) | round(2) }}
+          {% else %}
+            0
+          {% endif %}
+        attributes:
+          explanation: >
+            {% set stats = state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats %}
+            {% set avg_price = state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'avg_heating_price') | float(0) %}
+            {% if stats and stats.today_avg %}
+              Normaal: €{{ stats.today_avg | round(4) }}/kWh vs Slim: €{{ avg_price | round(4) }}/kWh
+            {% else %}
+              Geen data beschikbaar
+            {% endif %}
+
+# ================================================================================
+# STAP 3: AUTOMATISERINGEN
+# ================================================================================
+
+automation:
+  # ----------------------------------------------------------------------------
+  # AUTO 1: Start verwarming tijdens goedkoopste uren
+  # ----------------------------------------------------------------------------
+  - id: jacuzzi_smart_heating_on
+    alias: "Jacuzzi: Start Slimme Verwarming"
+    description: "Zet jacuzzi aan tijdens de goedkoopste uren"
+    
+    trigger:
+      # Check elke 15 minuten (kwartier resolutie van Tibber)
+      - platform: time_pattern
+        minutes: "/15"
+    
+    condition:
+      # Alleen als slimme verwarming is ingeschakeld
+      - condition: state
+        entity_id: input_boolean.jacuzzi_smart_heating
+        state: "on"
+      
+      # Check of het nu een goedkoop kwartier is
+      - condition: template
+        value_template: >
+          {{ state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'heating_now') == true }}
+      
+      # Niet al aan het verwarmen
+      - condition: template
+        value_template: >
+          {{ states('climate.jacuzzi') != 'heat' }}
+    
+    action:
+      # Zet jacuzzi aan
+      - service: climate.set_temperature
+        target:
+          entity_id: climate.jacuzzi
+        data:
+          temperature: "{{ states('input_number.jacuzzi_target_temp') }}"
+          hvac_mode: heat
+      
+      # Stuur notificatie
+      - service: notify.mobile_app_je_telefoon
+        data:
+          title: "🌊 Jacuzzi Verwarming Gestart"
+          message: >
+            Slimme verwarming actief! Goedkope stroom: €{{ states('sensor.electricity_price_total_incl_vat') }}/kWh.
+            Klaar rond {{ state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'start_times').split(', ')[-1] }}.
+          data:
+            notification_icon: mdi:hot-tub
+
+  # ----------------------------------------------------------------------------
+  # AUTO 2: Stop verwarming na goedkope periode
+  # ----------------------------------------------------------------------------
+  - id: jacuzzi_smart_heating_off
+    alias: "Jacuzzi: Stop Slimme Verwarming"
+    description: "Zet jacuzzi uit als goedkope periode voorbij is"
+    
+    trigger:
+      - platform: time_pattern
+        minutes: "/15"
+    
+    condition:
+      # Alleen als slimme verwarming is ingeschakeld
+      - condition: state
+        entity_id: input_boolean.jacuzzi_smart_heating
+        state: "on"
+      
+      # Check of het NIET meer een goedkoop kwartier is
+      - condition: template
+        value_template: >
+          {{ state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'heating_now') == false }}
+      
+      # Wel aan het verwarmen
+      - condition: template
+        value_template: >
+          {{ states('climate.jacuzzi') == 'heat' }}
+      
+      # Doeltemperatuur is bereikt
+      - condition: template
+        value_template: >
+          {{ state_attr('climate.jacuzzi', 'current_temperature') | float >= 
+             states('input_number.jacuzzi_target_temp') | float }}
+    
+    action:
+      # Zet jacuzzi op stand-by
+      - service: climate.set_hvac_mode
+        target:
+          entity_id: climate.jacuzzi
+        data:
+          hvac_mode: "off"
+      
+      # Notificatie
+      - service: notify.mobile_app_je_telefoon
+        data:
+          title: "✅ Jacuzzi Klaar"
+          message: >
+            Doeltemperatuur bereikt! Besparing vandaag: €{{ states('sensor.jacuzzi_verwarmingsbesparing') }}.
+            Geniet van je jacuzzi! 🌊
+
+  # ----------------------------------------------------------------------------
+  # AUTO 3: Dagelijkse planning update (optioneel)
+  # ----------------------------------------------------------------------------
+  - id: jacuzzi_daily_planning_notification
+    alias: "Jacuzzi: Dagelijkse Planning Notificatie"
+    description: "Stuur melding met beste verwarmingstijden voor morgen"
+    
+    trigger:
+      # Elke dag om 14:00 (na publicatie morgen prijzen)
+      - platform: time
+        at: "14:00:00"
+    
+    condition:
+      # Alleen als morgen prijzen beschikbaar zijn
+      - condition: template
+        value_template: >
+          {{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_available == true }}
+    
+    action:
+      - service: notify.mobile_app_je_telefoon
+        data:
+          title: "📊 Jacuzzi Planning Morgen"
+          message: >
+            Beste verwarmingstijden morgen: {{ state_attr('sensor.jacuzzi_beste_verwarmingsuren', 'start_times') }}.
+            
+            Prijzen morgen:
+            • Laagst: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_min }}
+            • Hoogst: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_max }}
+            • Gemiddeld: €{{ state_attr('sensor.electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_avg }}
+
+# ================================================================================
+# AANPASSINGEN VOOR JOUW SITUATIE
+# ================================================================================
+#
+# 1. Vervang "climate.jacuzzi" met jouw eigen entity ID
+#    Zoek deze op via Developer Tools → States
+#
+# 2. Vervang "notify.mobile_app_je_telefoon" met jouw notificatie service
+#
+# 3. Pas "kwh_per_hour" aan in de besparing sensor (regel 106)
+#    - Meet het vermogen van je jacuzzi (bijv. 3 kW = 3.0)
+#    - Of bereken: kWh verbruik per volledige opwarmcyclus / uren
+#
+# 4. Pas verwarmingsuren aan (input_number.jacuzzi_heating_hours)
+#    - Standaard 4 uur, maar hangt af van isolatie en capaciteit
+#
+# 5. Optioneel: Voeg conditie toe voor "ready_time"
+#    - Plan automatisch terug vanaf gewenste tijd
+#    - Bereken: start_time = ready_time - heating_hours
+#
+# ================================================================================
