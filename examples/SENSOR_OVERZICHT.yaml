@@ -239,28 +239,39 @@ price_info_summary:
 # Key: electricity_price_excl
 # Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_prijs_excl_energiebelasting') }} EUR/kWh
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_price_excl_energy_tax_incl_vat') }} EUR/kWh
 # Berekening: (spotprijs + surcharge) × 1.21
 # Attributen: Geen
 #
 # ---
 #
-# Entity: sensor.tibber_pulse_JOUW_ADRES_btw_percentage
+# Entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_excl_tax_in_cents
+# Key: electricity_price_excl_tax_in_cents
+# Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
+#
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_price_excl_tax_in_cents') }} cent/kWh
+# Berekening: (spotprijs + surcharge) × 100
+# Beschrijving: Prijs exclusief BTW in centen
+# Attributen: Geen
+#
+# ---
+#
+# Entity: sensor.tibber_pulse_JOUW_ADRES_tax_rate
 # Key: tax_rate
 # Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_btw_percentage') }} %
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_tax_rate') }} %
 # Bron: Configuratie (instelbaar bij integratie opties)
 # Standaard: 21 %
 # Attributen: Geen
 #
 # ---
 #
-# Entity: sensor.tibber_pulse_JOUW_ADRES_laatste_prijs_update
+# Entity: sensor.tibber_pulse_JOUW_ADRES_last_price_update
 # Key: last_price_update
 # Status: ✅ STANDAARD INGESCHAKELD
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_laatste_prijs_update') }}
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_last_price_update') }}
 # Type: Timestamp
 # Attributen: Geen
 
@@ -390,6 +401,14 @@ price_info_summary:
 #
 # ---
 #
+# Entity: sensor.tibber_pulse_JOUW_ADRES_estimated_consumption_current_hour
+# Key: estimated_consumption_current_hour
+#
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_estimated_consumption_current_hour') }} kWh
+# Beschrijving: Geschat totaal verbruik dit uur (op basis van huidig gemiddelde)
+#
+# ---
+#
 # Entity: sensor.tibber_pulse_JOUW_ADRES_accumulated_production
 # Key: accumulated_production
 #
@@ -400,10 +419,37 @@ price_info_summary:
 #
 # Entity: sensor.tibber_pulse_JOUW_ADRES_accumulated_production_current_hour
 # Key: accumulated_production_last_hour
+#
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_accumulated_production_current_hour') }} kWh
+#
+# ---
+#
+# Entity: sensor.tibber_pulse_JOUW_ADRES_last_meter_consumption
+# Key: last_meter_consumption
+#
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_last_meter_consumption') }} kWh
+# Beschrijving: Laatste meterstand verbruik (totaalteller)
+#
+# ---
+#
+# Entity: sensor.tibber_pulse_JOUW_ADRES_last_meter_production
+# Key: last_meter_production
+#
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_last_meter_production') }} kWh
+# Beschrijving: Laatste meterstand productie (totaalteller)
 
 # --------------------------------------------------------------------------------
 # 2.4 KOSTEN/OPBRENGSTEN
 # --------------------------------------------------------------------------------
+# Entity: sensor.tibber_pulse_JOUW_ADRES_accumulated_consumption_cost
+# Key: accumulated_consumption_cost
+#
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_accumulated_consumption_cost') }} EUR
+# Beschrijving: Totale kosten verbruik sinds installatie
+# Attributen: Geen
+#
+# ---
+#
 # Entity: sensor.tibber_pulse_JOUW_ADRES_accumulated_cost
 # Key: accumulated_cost
 #
@@ -422,35 +468,35 @@ price_info_summary:
 # --------------------------------------------------------------------------------
 # 2.5 MAANDELIJKSE STATISTIEKEN
 # --------------------------------------------------------------------------------
-# Entity: sensor.tibber_pulse_JOUW_ADRES_month_cost
+# Entity: sensor.tibber_pulse_JOUW_ADRES_monthly_cost
 # Key: month_cost
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_month_cost') }} EUR
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_monthly_cost') }} EUR
 # Beschrijving: Kosten deze maand
 # Attributen: Geen
 #
 # ---
 #
-# Entity: sensor.tibber_pulse_JOUW_ADRES_month_cons
+# Entity: sensor.tibber_pulse_JOUW_ADRES_monthly_net_consumption
 # Key: month_cons
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_month_cons') }} kWh
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_monthly_net_consumption') }} kWh
 # Beschrijving: Netto verbruik deze maand
 #
 # ---
 #
-# Entity: sensor.tibber_pulse_JOUW_ADRES_peak_hour
+# Entity: sensor.tibber_pulse_JOUW_ADRES_monthly_peak_hour_consumption
 # Key: peak_hour
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_peak_hour') }} kWh
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_monthly_peak_hour_consumption') }} kWh
 # Beschrijving: Hoogste uur verbruik deze maand
 #
 # ---
 #
-# Entity: sensor.tibber_pulse_JOUW_ADRES_peak_hour_time
+# Entity: sensor.tibber_pulse_JOUW_ADRES_time_of_max_hour_consumption
 # Key: peak_hour_time
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_peak_hour_time') }}
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_time_of_max_hour_consumption') }}
 # Type: Timestamp
 # Beschrijving: Wanneer was het hoogste uur verbruik
 
@@ -465,10 +511,13 @@ price_info_summary:
 #
 # Entity: sensor.tibber_pulse_JOUW_ADRES_current_l2
 # Key: current_l2
-#
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_current_l2') }} A
+# Beschrijving: Stroom op fase 2
+
 # Entity: sensor.tibber_pulse_JOUW_ADRES_current_l3
 # Key: current_l3
-#
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_current_l3') }} A
+# Beschrijving: Stroom op fase 3
 # ---
 #
 # Entity: sensor.tibber_pulse_JOUW_ADRES_voltage_phase1
@@ -479,16 +528,12 @@ price_info_summary:
 # Entity: sensor.tibber_pulse_JOUW_ADRES_voltage_phase2
 # Key: voltage_phase2
 #
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_voltage_phase2') }} V
+#
 # Entity: sensor.tibber_pulse_JOUW_ADRES_voltage_phase3
 # Key: voltage_phase3
 #
-# ---
-#
-# Entity: sensor.tibber_pulse_JOUW_ADRES_power_factor
-# Key: power_factor
-#
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_power_factor') }}
-# Beschrijving: Arbeidsfactor (cos φ)
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_voltage_phase3') }} V
 
 # --------------------------------------------------------------------------------
 # 2.7 PULSE HARDWARE INFO
@@ -588,29 +633,30 @@ Vervang JOUW_ADRES met je eigen adres (bijv. rijksweg_100).
 # TOTAAL AANTAL SENSOREN
 # ================================================================================
 #
-# PRIJZEN: 25 sensoren totaal
+# PRIJZEN: 26 sensoren totaal
 #   - 1 hoofd totale prijs sensor (INGESCHAKELD) [tibber_pulse_*]
 #   - 1 spotprijs sensor (UITGESCHAKELD) [tibber_pulse_*]
 #   - 6 min/max/avg vandaag/morgen totale prijs (INGESCHAKELD) [tibber_pulse_*]
 #   - 6 min/max/avg vandaag/morgen spotprijs (INGESCHAKELD) [tibber_pulse_*]
 #   - 2 energiebelasting sensoren (UITGESCHAKELD) [tibber_pulse_*]
 #   - 2 surcharge sensoren (UITGESCHAKELD) [GEEN tibber_pulse prefix!]
-#   - 3 berekende/debug sensoren (UITGESCHAKELD) [tibber_pulse_*]
+#   - 4 berekende/debug sensoren (UITGESCHAKELD) [tibber_pulse_*]
 #   - 4 prijs ranking sensoren (UITGESCHAKELD, legacy) [tibber_pulse_*]
 #
-# VERBRUIK/PRODUCTIE (Tibber Pulse): 21 sensoren
+# VERBRUIK/PRODUCTIE (Tibber Pulse): 26 sensoren
 #   - 1 maandelijkse kosten sensor [tibber_pulse_*]
 #   - 1 peak hour sensor [tibber_pulse_*]
 #   - 1 peak hour tijd sensor [tibber_pulse_*]
 #   - 1 maandelijks verbruik sensor [tibber_pulse_*]
 #   - 4 vermogen sensoren (power, average, min, max) [tibber_pulse_*]
-#   - 6 cumulatieve sensoren (consumption, production, cost, reward, etc) [tibber_pulse_*]
+#   - 9 cumulatieve sensoren (consumption, production, cost, reward, meter readings, etc) [tibber_pulse_*]
 #   - 3 voltage sensoren (phase 1/2/3) [tibber_pulse_*]
 #   - 3 current sensoren (L1/L2/L3) [tibber_pulse_*]
+#   - 2 productie sensoren (power_production, accumulated) [tibber_pulse_*]
 #   - 1 signal strength sensor [tibber_pulse_*]
 #
-# TOTAAL: 46 sensoren per adres
-#   - 44 sensoren met "tibber_pulse_JOUW_ADRES_" prefix
+# TOTAAL: 52 sensoren per adres
+#   - 50 sensoren met "tibber_pulse_JOUW_ADRES_" prefix
 #   - 2 sensoren met "JOUW_ADRES_" prefix (surcharge sensors)
 #
 # BELANGRIJK:
@@ -618,3 +664,4 @@ Vervang JOUW_ADRES met je eigen adres (bijv. rijksweg_100).
 # - Sensoren ZONDER "tibber_pulse_" komen van de integratie configuratie
 #
 # ================================================================================
+
