@@ -503,25 +503,33 @@ price_info_summary:
 # VOORBEELD: ALLE PRIJZEN VAN VANDAAG UITPRINTEN
 # ================================================================================
 
-{% set prices = state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary') %}
+{% set sensor_name = 'sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw' %}
+{% set prices = state_attr(sensor_name, 'price_info_summary') %}
 {% if prices and prices.today_all %}
 Vandaag prijzen ({{ prices.today_all | length }} kwartieren):
 {% for entry in prices.today_all %}
   {{ entry.startsAt }}: €{{ entry.total }}/kWh (spotprijs: €{{ entry.energy }}/kWh)
 {% endfor %}
+{% else %}
+ERROR: Sensor '{{ sensor_name }}' niet gevonden of price_info_summary niet beschikbaar.
+Vervang JOUW_ADRES met je eigen adres (bijv. maanstraat_17).
 {% endif %}
 
 # ================================================================================
 # VOORBEELD: GOEDKOOPSTE 4 UREN VANDAAG VINDEN
 # ================================================================================
 
-{% set prices = state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary') %}
+{% set sensor_name = 'sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw' %}
+{% set prices = state_attr(sensor_name, 'price_info_summary') %}
 {% if prices and prices.today_all %}
 {% set sorted = prices.today_all | sort(attribute='total') %}
 Goedkoopste 4 uren vandaag:
 {% for entry in sorted[:4] %}
   {{ entry.startsAt }}: €{{ entry.total }}/kWh
 {% endfor %}
+{% else %}
+ERROR: Sensor '{{ sensor_name }}' niet gevonden of price_info_summary niet beschikbaar.
+Vervang JOUW_ADRES met je eigen adres (bijv. maanstraat_17).
 {% endif %}
 
 # ================================================================================
