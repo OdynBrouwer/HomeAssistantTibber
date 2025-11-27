@@ -1,5 +1,5 @@
 # ==============================================================================
-# 📊 ApexCharts Dashboard: Stroomprijs 48 uur (Vandaag + Morgen)
+# 📊 ApexCharts Dashboard: Stroomprijs Vandaag (24 uur)
 # ==============================================================================
 #
 # INSTALLATIE:
@@ -8,21 +8,19 @@
 # 3. Kopieer deze code naar je dashboard
 #
 # BELANGRIJK:
-# - Gebruikt price_info_summary.today_all + tomorrow_all attributen
+# - Gebruikt price_info_summary.today_all attributen
 # - Geen history data nodig (realtime attribute data)
-# - Morgen prijzen verschijnen na 13:00 uur
-# - Voor 13:00: toont alleen vandaag (24h)
-# - Na 13:00: toont vandaag + morgen (48h)
+# - Toont alleen vandaag (00:00 - 23:45)
 #
 # ==============================================================================
 
 type: custom:apexcharts-card
 header:
   show: true
-  title: 📊 Stroomprijs 48 uur (Verbruik incl. BTW)
+  title: 📊 Stroomprijs Vandaag (Verbruik incl. BTW)
   show_states: true
   colorize_states: true
-graph_span: 48h
+graph_span: 24h
 span:
   start: day
 all_series_config:
@@ -30,7 +28,7 @@ all_series_config:
   curve: stepline
   type: line
 series:
-  # VANDAAG + MORGEN PRIJZEN (gecombineerd)
+  # VANDAAG PRIJZEN
   - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
     name: 🔌 Stroomprijs
     color: blue
@@ -42,13 +40,11 @@ series:
       in_header: true
     data_generator: |
       const today = entity.attributes.price_info_summary.today_all || [];
-      const tomorrow = entity.attributes.price_info_summary.tomorrow_all || [];
-      const combined = [...today, ...tomorrow];
-      return combined.map((entry) => {
+      return today.map((entry) => {
         return [new Date(entry.startsAt).getTime(), entry.total];
       });
   
-  # LAAGSTE PRIJS REFERENTIE (VANDAAG + MORGEN)
+  # LAAGSTE PRIJS REFERENTIE (VANDAAG)
   - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
     name: ⬇️ Laagste prijs
     color: green
@@ -62,18 +58,16 @@ series:
       extremas: time
     data_generator: |
       const today = entity.attributes.price_info_summary.today_all || [];
-      const tomorrow = entity.attributes.price_info_summary.tomorrow_all || [];
-      const combined = [...today, ...tomorrow];
       const now = new Date().getTime();
-      // Filter alleen verleden + huidige tijd van gecombineerde data
-      const past = combined.filter(entry => new Date(entry.startsAt).getTime() <= now);
+      // Filter alleen verleden + huidige tijd
+      const past = today.filter(entry => new Date(entry.startsAt).getTime() <= now);
       // Bereken MIN alleen van verleden data
       const min = Math.min(...past.map(e => e.total));
       return past.map((entry) => {
         return [new Date(entry.startsAt).getTime(), min];
       });
   
-  # HOOGSTE PRIJS REFERENTIE (VANDAAG + MORGEN)
+  # HOOGSTE PRIJS REFERENTIE (VANDAAG)
   - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
     name: ⬆️ Hoogste prijs
     color: red
@@ -87,11 +81,9 @@ series:
       extremas: time
     data_generator: |
       const today = entity.attributes.price_info_summary.today_all || [];
-      const tomorrow = entity.attributes.price_info_summary.tomorrow_all || [];
-      const combined = [...today, ...tomorrow];
       const now = new Date().getTime();
-      // Filter alleen verleden + huidige tijd van gecombineerde data
-      const past = combined.filter(entry => new Date(entry.startsAt).getTime() <= now);
+      // Filter alleen verleden + huidige tijd
+      const past = today.filter(entry => new Date(entry.startsAt).getTime() <= now);
       // Bereken MAX alleen van verleden data
       const max = Math.max(...past.map(e => e.total));
       return past.map((entry) => {
