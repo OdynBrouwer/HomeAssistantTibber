@@ -1,0 +1,87 @@
+# ==============================================================================
+# 📊 ApexCharts Dashboard: Stroomprijs (Gisteren 14:00 - Morgen 14:00)
+# ==============================================================================
+#
+# INSTALLATIE:
+# 1. Installeer "ApexCharts Card" via HACS
+# 2. Vervang "JOUW_ADRES" met je sensor naam (bijv. "maanstraat_17")
+# 3. Kopieer deze code naar je dashboard
+#
+# ==============================================================================
+
+type: custom:apexcharts-card
+header:
+  show: true
+  title: 📊 Stroomprijs (Verbruik incl. BTW)
+  show_states: true
+  colorize_states: true
+graph_span: 48h
+span:
+  start: day
+  offset: -10h
+now:
+  show: true
+  label: Nu
+  color: red
+all_series_config:
+  stroke_width: 3
+  curve: stepline
+  show:
+    legend_value: true
+    in_header: true
+series:
+  # VERBRUIKSPRIJS TOTAAL
+  - entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
+    name: 🔌 Verbruiksprijs (totaal incl. BTW)
+    type: line
+    color: blue
+    stroke_width: 3
+    show:
+      in_chart: true
+      legend_value: true
+      extremas: true
+  
+  # VANDAAG MIN REFERENTIELIJN
+  - entity: sensor.tibber_pulse_JOUW_ADRES_vandaag_laagste_prijs
+    name: ⬇️ Laagste prijs
+    type: line
+    stroke_width: 2
+    color: green
+    opacity: 0.6
+    show:
+      in_chart: true
+      legend_value: true
+  
+  # VANDAAG MAX REFERENTIELIJN
+  - entity: sensor.tibber_pulse_JOUW_ADRES_vandaag_hoogste_prijs
+    name: ⬆️ Hoogste prijs
+    type: line
+    stroke_width: 2
+    color: red
+    opacity: 0.6
+    show:
+      in_chart: true
+      legend_value: true
+
+yaxis:
+  - id: price
+    decimals: 4
+    apex_config:
+      title:
+        text: Prijs (EUR/kWh)
+
+apex_config:
+  chart:
+    height: 400
+  xaxis:
+    labels:
+      format: dd/MM HH:mm
+      datetimeUTC: false
+  tooltip:
+    enabled: true
+    shared: true
+    x:
+      format: dd MMM HH:mm
+  legend:
+    show: true
+    position: bottom
