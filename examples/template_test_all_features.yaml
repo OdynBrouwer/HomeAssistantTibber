@@ -1,0 +1,300 @@
+# ================================================================================
+# 🥷 NINJA TEST TEMPLATE - Test Alle Tibber Advanced Features
+# ================================================================================
+#
+# Kopieer deze hele template naar Developer Tools → Template
+# en check of alle features werken!
+#
+# ================================================================================
+
+# ================================================================================
+# 📊 SECTIE 1: NIEUWE TODAY/TOMORROW SENSORS
+# ================================================================================
+
+=== TODAY PRICE SENSORS (beschikbaar vanaf 00:00) ===
+Today Min:  {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_min') }} EUR/kWh
+Today Max:  {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_max') }} EUR/kWh
+Today Avg:  {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_avg') }} EUR/kWh
+Range:      {{ (states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_max')|float - states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_min')|float) | round(4) }} EUR/kWh verschil
+
+=== TOMORROW PRICE SENSORS (beschikbaar vanaf ~14:00) ===
+Tomorrow Min: {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_tomorrow_min') }} EUR/kWh
+Tomorrow Max: {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_tomorrow_max') }} EUR/kWh
+Tomorrow Avg: {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_tomorrow_avg') }} EUR/kWh
+Status: {% if states('sensor.tibber_pulse_maanstraat_17_electricity_price_tomorrow_min') == 'unknown' %}⏳ Nog niet gepubliceerd{% else %}✅ Beschikbaar!{% endif %}
+
+
+# ================================================================================
+# 📈 SECTIE 2: EXTENDED PRICE_INFO_SUMMARY ATTRIBUTES
+# ================================================================================
+
+{% set summary = state_attr('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat', 'price_info_summary') %}
+
+=== STATISTICS ===
+{% if summary and summary.stats %}
+Today:    Min €{{ summary.stats.today_min }} | Max €{{ summary.stats.today_max }} | Avg €{{ summary.stats.today_avg }}
+Tomorrow: {% if summary.stats.tomorrow_available %}Min €{{ summary.stats.tomorrow_min }} | Max €{{ summary.stats.tomorrow_max }} | Avg €{{ summary.stats.tomorrow_avg }}{% else %}Nog niet beschikbaar{% endif %}
+{% else %}
+⚠️ Geen stats beschikbaar
+{% endif %}
+
+=== DATA ARRAYS (aantal entries) ===
+{% if summary %}
+Today All:    {{ summary.today_all | length }} entries (verwacht: 96 = 24u × 4 kwartieren)
+Tomorrow All: {{ summary.tomorrow_all | length }} entries (verwacht: 0 of 96)
+Next 24h:     {{ summary.next_24h | length }} entries (verwacht: ~40-96)
+Next 48h:     {{ summary.next_48h | length }} entries (verwacht: ~40-192)
+Upcoming:     {{ summary.upcoming | length }} entries (verwacht: 6)
+{% else %}
+⚠️ Geen price_info_summary beschikbaar
+{% endif %}
+
+=== CURRENT PRICE INFO ===
+{% if summary and summary.current %}
+Timestamp:  {{ summary.current.startsAt }}
+Total:      €{{ summary.current.total }}/kWh
+Energy:     €{{ summary.current.energy }}/kWh (spotprijs)
+Tax:        €{{ summary.current.tax }}/kWh
+Level:      {{ summary.current.level }}
+{% else %}
+⚠️ Geen current price beschikbaar
+{% endif %}
+
+
+# ================================================================================
+# 🎯 SECTIE 3: SMART SCHEDULING - CHEAPEST HOURS DETECTION
+# ================================================================================
+
+{% set prices = state_attr('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat', 'price_info_summary') %}
+{% set hours_needed = 4 %}
+
+=== GOEDKOOPSTE {{ hours_needed }} UREN IN NEXT 24H ===
+{% if prices and prices.next_24h %}
+{% set sorted_prices = prices.next_24h | sort(attribute='total') %}
+{% for entry in sorted_prices[:hours_needed] %}
+  {{ loop.index }}. {{ as_timestamp(entry.startsAt) | timestamp_custom('%a %H:%M') }} - €{{ entry.total }}/kWh ({{ entry.level }})
+{% endfor %}
+
+Totale kosten voor {{ hours_needed }}u @ 3kW: €{{ (sorted_prices[:hours_needed] | map(attribute='total') | sum * hours_needed * 3) | round(2) }}
+Gemiddelde prijs: €{{ (sorted_prices[:hours_needed] | map(attribute='total') | sum / hours_needed) | round(4) }}/kWh
+{% else %}
+⚠️ Geen next_24h data
+{% endif %}
+
+=== IS HET NU EEN GOEDKOOP MOMENT? ===
+{% if prices and prices.next_24h %}
+{% set sorted_prices = prices.next_24h | sort(attribute='total') %}
+{% set cheapest_times = sorted_prices[:hours_needed] | map(attribute='startsAt') | list %}
+{% set now_str = now().isoformat() %}
+{% set current_quarter = none %}
+{# Zoek huidige kwartier #}
+{% for entry in prices.next_24h %}
+  {% set start = as_timestamp(entry.startsAt) %}
+  {% set end = start + 900 %}
+  {% if as_timestamp(now()) >= start and as_timestamp(now()) < end %}
+    {% set current_quarter = entry.startsAt %}
+  {% endif %}
+{% endfor %}
+{% if current_quarter in cheapest_times %}
+✅ JA! Nu is een goedkoop moment om apparaten in te schakelen!
+   Huidige prijs: €{{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat') }}/kWh
+{% else %}
+⏸️ Nee, wacht op een goedkoper moment.
+   Volgende goedkope tijd: {{ as_timestamp(sorted_prices[0].startsAt) | timestamp_custom('%H:%M') if sorted_prices[0].startsAt > now().isoformat() else 'Later vandaag' }}
+{% endif %}
+{% endif %}
+
+
+# ================================================================================
+# 💰 SECTIE 4: SAVINGS CALCULATION
+# ================================================================================
+
+{% set stats = state_attr('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat', 'price_info_summary').stats %}
+{% set prices = state_attr('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat', 'price_info_summary') %}
+
+=== BESPARING DOOR SLIM LADEN ===
+{% if prices and prices.next_24h and stats %}
+{% set hours = 4 %}
+{% set kwh_per_hour = 3.0 %}
+{% set sorted = prices.next_24h | sort(attribute='total') %}
+{% set cheap_avg = sorted[:hours] | map(attribute='total') | sum / hours %}
+{% set total_avg = stats.today_avg %}
+
+Scenario: {{ hours }} uur laden @ {{ kwh_per_hour }} kW
+- Als je nu laadt (gemiddeld):  €{{ (total_avg * hours * kwh_per_hour) | round(2) }}
+- Als je slim laadt (goedkoopst): €{{ (cheap_avg * hours * kwh_per_hour) | round(2) }}
+- BESPARING: €{{ ((total_avg - cheap_avg) * hours * kwh_per_hour) | round(2) }} 💰
+
+Beste tijden: {{ sorted[:hours] | map(attribute='startsAt') | map('as_timestamp') | map('timestamp_custom', '%H:%M') | list | join(', ') }}
+{% else %}
+⚠️ Kan besparing niet berekenen
+{% endif %}
+
+
+# ================================================================================
+# 📉 SECTIE 5: NEGATIEVE PRIJZEN DETECTIE (voor zonnepanelen)
+# ================================================================================
+
+{% set prices = state_attr('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat', 'price_info_summary') %}
+
+=== NEGATIEVE SPOTPRIJZEN (uitschakelen teruglevering!) ===
+{% if prices and prices.next_24h %}
+{% set negative_hours = prices.next_24h | selectattr('energy', 'lt', 0) | list %}
+{% if negative_hours | length > 0 %}
+⚠️ LET OP! {{ negative_hours | length }} periodes met negatieve prijzen gevonden!
+{% for entry in negative_hours %}
+  - {{ as_timestamp(entry.startsAt) | timestamp_custom('%a %H:%M') }}: €{{ entry.energy }}/kWh 🔴
+{% endfor %}
+
+ACTIE: Zet omvormer UIT tijdens deze tijden om niet bij te betalen!
+{% else %}
+✅ Geen negatieve prijzen in komende 24u
+{% endif %}
+{% endif %}
+
+Huidige spotprijs: €{{ states('sensor.tibber_pulse_maanstraat_17_electricity_base_price_without_surcharge') }}/kWh
+Status: {% if states('sensor.tibber_pulse_maanstraat_17_electricity_base_price_without_surcharge')|float < 0 %}🔴 NEGATIEF - Omvormer UIT!{% else %}✅ Positief{% endif %}
+
+
+# ================================================================================
+# 🔍 SECTIE 6: DATA QUALITY CHECK
+# ================================================================================
+
+{% set prices = state_attr('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat', 'price_info_summary') %}
+
+=== DATA KWALITEIT CONTROLE ===
+{% if prices %}
+✓ price_info_summary bestaat: JA
+✓ Current entry:   {{ 'JA' if prices.current else 'NEE ⚠️' }}
+✓ Stats:           {{ 'JA' if prices.stats else 'NEE ⚠️' }}
+✓ Today data:      {{ prices.today_all | length }} entries {{ '✓' if prices.today_all | length == 96 else '⚠️ Verwacht 96' }}
+✓ Tomorrow data:   {{ prices.tomorrow_all | length }} entries {{ '✓' if prices.tomorrow_all | length in [0, 96] else '⚠️' }}
+✓ Next 24h data:   {{ prices.next_24h | length }} entries {{ '✓' if prices.next_24h | length > 0 else '⚠️' }}
+✓ Next 48h data:   {{ prices.next_48h | length }} entries {{ '✓' if prices.next_48h | length > 0 else '⚠️' }}
+✓ Upcoming data:   {{ prices.upcoming | length }} entries {{ '✓' if prices.upcoming | length == 6 else '⚠️ Verwacht 6' }}
+
+TIMESTAMPS VALIDATIE:
+{% if prices.today_all | length > 0 %}
+  Eerste today:  {{ prices.today_all[0].startsAt }}
+  Laatste today: {{ prices.today_all[-1].startsAt }}
+{% endif %}
+{% if prices.next_24h | length > 0 %}
+  Eerste 24h:    {{ prices.next_24h[0].startsAt }}
+  Laatste 24h:   {{ prices.next_24h[-1].startsAt }}
+{% endif %}
+
+CURRENCY CHECK:
+  Currency: {{ prices.currency if prices.currency else '⚠️ Niet ingesteld' }}
+  Source:   {{ prices.source if prices.source else '⚠️ Niet ingesteld' }}
+{% else %}
+❌ price_info_summary NIET BESCHIKBAAR
+   - Herlaad de Tibber Advanced integratie
+   - Wacht 1-2 minuten
+   - Controleer logs voor errors
+{% endif %}
+
+
+# ================================================================================
+# 🎨 SECTIE 7: APEXCHARTS DATA GENERATOR TEST
+# ================================================================================
+
+=== APEXCHARTS COMPATIBLE DATA FORMAT ===
+{% set prices = state_attr('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat', 'price_info_summary') %}
+{% if prices and prices.next_24h %}
+Eerste 5 entries voor ApexCharts data_generator:
+{% for entry in prices.next_24h[:5] %}
+  [{{ as_timestamp(entry.startsAt) * 1000 }}, {{ entry.total }}],  // {{ as_timestamp(entry.startsAt) | timestamp_custom('%H:%M') }}
+{% endfor %}
+
+JavaScript snippet voor ApexCharts:
+return entity.attributes.price_info_summary.next_24h.map((entry) => {
+  return [new Date(entry.startsAt).getTime(), entry.total];
+});
+
+Total entries voor grafiek: {{ prices.next_24h | length }}
+{% endif %}
+
+
+# ================================================================================
+# 🚦 SECTIE 8: PRICE LEVEL DISTRIBUTION
+# ================================================================================
+
+{% set prices = state_attr('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat', 'price_info_summary') %}
+
+=== PRIJSNIVEAU VERDELING VANDAAG ===
+{% if prices and prices.today_all %}
+{% set very_cheap = prices.today_all | selectattr('level', 'eq', 'VERY_CHEAP') | list | length %}
+{% set cheap = prices.today_all | selectattr('level', 'eq', 'CHEAP') | list | length %}
+{% set normal = prices.today_all | selectattr('level', 'eq', 'NORMAL') | list | length %}
+{% set expensive = prices.today_all | selectattr('level', 'eq', 'EXPENSIVE') | list | length %}
+{% set very_expensive = prices.today_all | selectattr('level', 'eq', 'VERY_EXPENSIVE') | list | length %}
+
+VERY_CHEAP:      {{ very_cheap }} kwartieren ({{ (very_cheap / 96 * 100) | round(1) }}%)
+CHEAP:           {{ cheap }} kwartieren ({{ (cheap / 96 * 100) | round(1) }}%)
+NORMAL:          {{ normal }} kwartieren ({{ (normal / 96 * 100) | round(1) }}%)
+EXPENSIVE:       {{ expensive }} kwartieren ({{ (expensive / 96 * 100) | round(1) }}%)
+VERY_EXPENSIVE:  {{ very_expensive }} kwartieren ({{ (very_expensive / 96 * 100) | round(1) }}%)
+
+Huidig niveau: {{ prices.current.level if prices.current else 'Onbekend' }}
+{% endif %}
+
+
+# ================================================================================
+# ✅ SECTIE 9: QUICK STATUS SUMMARY
+# ================================================================================
+
+=== 🥷 NINJA QUICK STATUS ===
+
+{% set summary = state_attr('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat', 'price_info_summary') %}
+{% set today_min = states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_min') %}
+{% set tomorrow_min = states('sensor.tibber_pulse_maanstraat_17_electricity_price_tomorrow_min') %}
+
+🔋 Huidige prijs: {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat') }} EUR/kWh ({{ summary.current.level if summary and summary.current else 'N/A' }})
+📊 Today range:   {{ today_min }} - {{ states('sensor.tibber_pulse_maanstraat_17_electricity_price_today_max') }} EUR/kWh
+📅 Tomorrow:      {{ 'Beschikbaar' if tomorrow_min != 'unknown' else 'Nog niet gepubliceerd (rond 14:00)' }}
+📈 Data status:   {{ '✅ Volledig' if summary and summary.today_all | length == 96 else '⚠️ Incompleet' }}
+⏰ Laatste update: {{ states('sensor.tibber_pulse_maanstraat_17_last_price_update') }}
+
+{% if summary and summary.next_24h %}
+{% set sorted = summary.next_24h | sort(attribute='total') %}
+💡 Goedkoopste uur komende 24h: {{ as_timestamp(sorted[0].startsAt) | timestamp_custom('%a %H:%M') }} @ €{{ sorted[0].total }}/kWh
+💸 Duurste uur komende 24h:     {{ as_timestamp(sorted[-1].startsAt) | timestamp_custom('%a %H:%M') }} @ €{{ sorted[-1].total }}/kWh
+💰 Potentiële besparing: €{{ ((sorted[-1].total - sorted[0].total) * 3) | round(2) }} per 3 kWh
+{% endif %}
+
+ADVIES:
+{% if summary and summary.next_24h %}
+{% set sorted = summary.next_24h | sort(attribute='total') %}
+{% set now_price = states('sensor.tibber_pulse_maanstraat_17_electricity_price_total_incl_vat') | float %}
+{% set avg_price = summary.stats.today_avg if summary.stats else 0.25 %}
+{% if now_price < sorted[10].total %}
+  ✅ Goed moment om energie-intensieve apparaten te gebruiken!
+{% elif now_price > avg_price %}
+  ⏸️ Wacht liever op een goedkoper moment.
+{% else %}
+  ⚖️ Gemiddeld moment, niet urgent om te wachten.
+{% endif %}
+{% endif %}
+
+=== EINDE NINJA TEST ===
+
+# ================================================================================
+# 🎯 VERWACHTE RESULTATEN
+# ================================================================================
+#
+# ✅ Alle today sensors tonen waarden (niet "unknown")
+# ✅ Tomorrow sensors tonen "unknown" vóór 14:00, waarden ná 14:00
+# ✅ Today_all heeft 96 entries
+# ✅ Tomorrow_all heeft 0 entries vóór 14:00, 96 ná 14:00
+# ✅ Next_24h heeft 40-96 entries (afhankelijk van tijd van dag)
+# ✅ Current entry timestamp matcht met huidige tijd (binnen 15min)
+# ✅ Stats tonen min/max/avg voor vandaag
+# ✅ Geen errors of "unavailable" waarschuwingen
+#
+# ❌ Als iets niet klopt:
+#    1. Herlaad Tibber Advanced integratie
+#    2. Wacht 1-2 minuten
+#    3. Check Developer Tools → Logs voor "tibber" errors
+#    4. Controleer of API token geldig is
+#
+# ================================================================================
