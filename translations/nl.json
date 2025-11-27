@@ -153,6 +153,18 @@
             "last_price_update": {
                 "name": "Laatste prijsupdate"
             },
+            "electricity_price_today_min": {
+                "name": "Vandaag laagste prijs",
+                "state": "Laagste stroomprijs voor vandaag (totaal incl. BTW)"
+            },
+            "electricity_price_today_max": {
+                "name": "Vandaag hoogste prijs",
+                "state": "Hoogste stroomprijs voor vandaag (totaal incl. BTW)"
+            },
+            "electricity_price_today_avg": {
+                "name": "Vandaag gemiddelde prijs",
+                "state": "Gemiddelde stroomprijs voor vandaag (totaal incl. BTW)"
+            },
             "electricity_price_tomorrow_min": {
                 "name": "Morgen laagste prijs",
                 "state": "Laagste stroomprijs voor morgen (totaal incl. BTW)"

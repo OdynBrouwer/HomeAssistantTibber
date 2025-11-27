@@ -673,6 +673,63 @@ class TibberHome:
         return self.currency + "/" + self.consumption_unit
     
     @property
+    def electricity_price_today_min(self) -> float | None:
+        """Get minimum price for today."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + dt.timedelta(days=1)
+        
+        today_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if today_start <= ts < today_end:
+                price = entry.get("total")
+                if price is not None:
+                    today_prices.append(price)
+        
+        return min(today_prices) if today_prices else None
+    
+    @property
+    def electricity_price_today_max(self) -> float | None:
+        """Get maximum price for today."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + dt.timedelta(days=1)
+        
+        today_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if today_start <= ts < today_end:
+                price = entry.get("total")
+                if price is not None:
+                    today_prices.append(price)
+        
+        return max(today_prices) if today_prices else None
+    
+    @property
+    def electricity_price_today_avg(self) -> float | None:
+        """Get average price for today."""
+        now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)
+        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = today_start + dt.timedelta(days=1)
+        
+        today_prices = []
+        for entry in self._price_info.values():
+            ts = entry.get("timestamp")
+            if not isinstance(ts, dt.datetime):
+                continue
+            if today_start <= ts < today_end:
+                price = entry.get("total")
+                if price is not None:
+                    today_prices.append(price)
+        
+        return sum(today_prices) / len(today_prices) if today_prices else None
+    
+    @property
     def electricity_price_tomorrow_min(self) -> float | None:
         """Get minimum price for tomorrow."""
         now = dt.datetime.now(tz=dt.UTC).astimezone(self._tibber_control.time_zone)

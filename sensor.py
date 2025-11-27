@@ -434,6 +434,32 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     
+    # Today price sensors
+    TibberSensorEntityDescription(
+        key="electricity_price_today_min",
+        translation_key="electricity_price_today_min",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
+    TibberSensorEntityDescription(
+        key="electricity_price_today_max",
+        translation_key="electricity_price_today_max",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
+    TibberSensorEntityDescription(
+        key="electricity_price_today_avg",
+        translation_key="electricity_price_today_avg",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement_key="price_unit",
+        icon=ICON,
+        suggested_display_precision=4,
+    ),
+    
     # Tomorrow price sensors
     TibberSensorEntityDescription(
         key="electricity_price_tomorrow_min",
