@@ -9,8 +9,17 @@
 # - Alle beschikbare attributen per sensor
 # - Welke sensoren je moet gebruiken voor automatiseringen
 #
+# ⚠️ BELANGRIJK - ENTITY_ID vs FRIENDLY NAME:
+# 
+# Entity_id (voor templates/automaties): sensor.tibber_pulse_rijksweg_100_electricity_price_total_incl_vat
+# Friendly name (in UI):                  Totale prijs incl. BTW
+#
+# De entity_id's in dit bestand zijn in het ENGELS (zoals ze in HA bestaan!)
+# De friendly names zijn in het NEDERLANDS (alleen in de UI zichtbaar)
+#
 # GEBRUIK:
 # Kopieer dit naar je Developer Tools → Template om live data te zien
+# Vergeet niet JOUW_ADRES te vervangen met bijv. rijksweg_100
 #
 # ================================================================================
 
@@ -21,12 +30,12 @@
 # --------------------------------------------------------------------------------
 # 1.1 HOOFDSENSOR - TOTALE PRIJS (ALTIJD GEBRUIKEN VOOR VERBRUIK!)
 # --------------------------------------------------------------------------------
-# Entity: sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw
+# Entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
 # Key: electricity_price
 # Status: ✅ STANDAARD INGESCHAKELD
 # Gebruik: VERBRUIK beslissingen (apparaten inschakelen, batterij laden, etc.)
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw') }} EUR/kWh
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat') }} EUR/kWh
 #
 # Dit is de OFFICIËLE Tibber API prijs inclusief ALLES:
 # - Nord Pool spotprijs
@@ -37,11 +46,11 @@
 # Attributen:
 price_info_summary:
   current:
-    startsAt: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').current.startsAt }}
-    total: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').current.total }}
-    energy: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').current.energy }}
-    tax: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').current.tax }}
-    level: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').current.level }}
+    startsAt: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.startsAt }}
+    total: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.total }}
+    energy: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.energy }}
+    tax: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.tax }}
+    level: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').current.level }}
   
   upcoming: (6 volgende kwartieren)
     # Gebruik: state_attr(...).upcoming[0].total voor volgend kwartier
@@ -59,23 +68,23 @@ price_info_summary:
     # Perfect voor "komende 2 dagen" grafieken
   
   stats:
-    today_min: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.today_min }}
-    today_max: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.today_max }}
-    today_avg: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.today_avg }}
-    tomorrow_available: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_available }}
-    tomorrow_min: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_min }}
-    tomorrow_max: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_max }}
-    tomorrow_avg: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw', 'price_info_summary').stats.tomorrow_avg }}
+    today_min: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.today_min }}
+    today_max: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.today_max }}
+    today_avg: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.today_avg }}
+    tomorrow_available: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_available }}
+    tomorrow_min: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_min }}
+    tomorrow_max: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_max }}
+    tomorrow_avg: {{ state_attr('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat', 'price_info_summary').stats.tomorrow_avg }}
 
 # --------------------------------------------------------------------------------
 # 1.2 SPOTPRIJS ZONDER KOSTEN (GEBRUIKEN VOOR ZONNEPANELEN!)
 # --------------------------------------------------------------------------------
-# Entity: sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten
+# Entity: sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
 # Key: electricity_price_excl_base
 # Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
 # Gebruik: TERUGLEVERING beslissingen (omvormer aan/uit, saldering)
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten') }} EUR/kWh
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge') }} EUR/kWh
 #
 # Dit is de NORD POOL SPOTPRIJS exclusief alle kosten:
 # - Geen Tibber surcharge
@@ -96,6 +105,7 @@ price_info_summary:
 # Key: electricity_price_today_min
 # Status: ✅ STANDAARD INGESCHAKELD
 # Gebruik: Snel zien wat de laagste prijs van vandaag is
+# NAAM: In UI zie je "Vandaag laagste prijs" (NL vertaling)
 #
 # Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_vandaag_laagste_prijs') }} EUR/kWh
 # Attributen: Geen
@@ -189,64 +199,42 @@ price_info_summary:
 # --------------------------------------------------------------------------------
 # 1.7 ENERGIEBELASTING SENSOREN
 # --------------------------------------------------------------------------------
-# Entity: sensor.tibber_pulse_JOUW_ADRES_energiebelasting_excl_btw
+# Entity: sensor.tibber_pulse_JOUW_ADRES_electricity_energy_tax_excl_vat
 # Key: electricity_price_energy_tax_excl
 # Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_energiebelasting_excl_btw') }} EUR/kWh
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_energy_tax_excl_vat') }} EUR/kWh
 # Bron: Configuratie (instelbaar bij integratie opties)
 # Standaard: 0.10148 EUR/kWh (2024/2025 tarief excl. BTW)
 # Attributen: Geen
 #
 # ---
 #
-# Entity: sensor.tibber_pulse_JOUW_ADRES_energiebelasting_incl_btw
+# Entity: sensor.tibber_pulse_JOUW_ADRES_electricity_energy_tax_incl_vat
 # Key: electricity_price_energy_tax_incl
 # Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_energiebelasting_incl_btw') }} EUR/kWh
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_energy_tax_incl_vat') }} EUR/kWh
 # Berekening: energy_tax_excl × 1.21
 # Standaard: 0.1228 EUR/kWh (2024/2025)
 # Attributen: Geen
 
 # --------------------------------------------------------------------------------
-# 1.8 TIBBER SURCHARGE (INKOOPVERGOEDING)
+# 1.8 DEBUG/DIAGNOSTIC SENSOREN
 # --------------------------------------------------------------------------------
-# Entity: sensor.tibber_pulse_JOUW_ADRES_inkoopvergoeding_excl_btw
-# Key: electricity_price_purchasing_compensation_excl
-# Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
-#
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_inkoopvergoeding_excl_btw') }} EUR/kWh
-# Bron: Configuratie (instelbaar bij integratie opties)
-# Standaard: 0.0205 EUR/kWh (Tibber standaard tarief)
-# Attributen: Geen
-#
-# ---
-#
-# Entity: sensor.tibber_pulse_JOUW_ADRES_inkoopvergoeding_incl_btw
-# Key: electricity_price_purchasing_compensation_incl
-# Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
-#
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_inkoopvergoeding_incl_btw') }} EUR/kWh
-# Berekening: surcharge_excl × 1.21
-# Attributen: Geen
-
-# --------------------------------------------------------------------------------
-# 1.9 DEBUG/DIAGNOSTIC SENSOREN
-# --------------------------------------------------------------------------------
-# Entity: sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw_berekend
+# Entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat_calculated
 # Key: electricity_price_calc
 # Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
 # Gebruik: DEBUG - vergelijken met officiële Tibber API prijs
 #
-# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw_berekend') }} EUR/kWh
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat_calculated') }} EUR/kWh
 # Berekening: ((spotprijs + surcharge + energy_tax) × 1.21)
 # ⚠️ GEBRUIK DIT NIET VOOR AUTOMATIES! Gebruik electricity_price
 # Attributen: Geen
 #
 # ---
 #
-# Entity: sensor.tibber_pulse_JOUW_ADRES_prijs_excl_energiebelasting
+# Entity: sensor.tibber_pulse_JOUW_ADRES_electricity_price_excl_energy_tax_incl_vat
 # Key: electricity_price_excl
 # Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
 #
@@ -273,6 +261,69 @@ price_info_summary:
 #
 # Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_laatste_prijs_update') }}
 # Type: Timestamp
+# Attributen: Geen
+
+# --------------------------------------------------------------------------------
+# 1.10 PRIJS RANKING SENSOREN (LEGACY - NIET AANBEVOLEN)
+# --------------------------------------------------------------------------------
+# ⚠️ Deze sensoren zijn van de OUDE Tibber integratie overgenomen maar NIET AANBEVOLEN
+# Gebruik in plaats daarvan: attributes.price_info_summary met custom template logic
+#
+# Entity: sensor.tibber_pulse_JOUW_ADRES_hour_in_is_the_top_x_cheapest_hours_today
+# Key: hour_cheapest_top
+# Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
+#
+# Waarde: {{ states('sensor.tibber_pulse_JOUW_ADRES_hour_in_is_the_top_x_cheapest_hours_today') }}
+# Beschrijving: Rank 0-1 voor huidig uur vergeleken met alle uren vandaag (0 = goedkoopst)
+# Attributen: Geen
+#
+# ---
+#
+# Entity: sensor.tibber_pulse_JOUW_ADRES_hour_in_is_the_top_x_cheapest_hours_today_between_0_00_and_8_00
+# Key: hour_cheapest_top_after_0000
+# Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
+#
+# Beschrijving: Rank 0-1 vergeleken met nachturen (00:00-08:00)
+#
+# ---
+#
+# Entity: sensor.tibber_pulse_JOUW_ADRES_hour_in_is_the_top_x_cheapest_hours_today_between_8_00_and_18_00
+# Key: hour_cheapest_top_after_0800
+# Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
+#
+# Beschrijving: Rank 0-1 vergeleken met daguren (08:00-18:00)
+#
+# ---
+#
+# Entity: sensor.tibber_pulse_JOUW_ADRES_hour_in_is_the_top_x_cheapest_hours_today_between_18_00_and_0_00
+# Key: hour_cheapest_top_after_1800
+# Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
+#
+# Beschrijving: Rank 0-1 vergeleken met avonduren (18:00-00:00)
+
+# --------------------------------------------------------------------------------
+# 1.11 SURCHARGE SENSOREN (GEEN TIBBER PULSE PREFIX!)
+# --------------------------------------------------------------------------------
+# ⚠️ LET OP: Deze sensoren hebben NIET het "tibber_pulse_" prefix!
+# Ze komen van de configuratie, niet van de Tibber Pulse hardware.
+#
+# Entity: sensor.JOUW_ADRES_inkoopvergoeding_excl_btw_geconfigureerd
+# Key: electricity_price_purchasing_compensation_excl
+# Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
+#
+# Waarde: {{ states('sensor.JOUW_ADRES_inkoopvergoeding_excl_btw_geconfigureerd') }} EUR/kWh
+# Bron: Configuratie (instelbaar bij integratie opties)
+# Standaard: 0.0205 EUR/kWh (Tibber standaard tarief)
+# Attributen: Geen
+#
+# ---
+#
+# Entity: sensor.JOUW_ADRES_inkoopvergoeding_incl_btw_berekend
+# Key: electricity_price_purchasing_compensation_incl
+# Status: ⚠️ STANDAARD UITGESCHAKELD (diagnostic)
+#
+# Waarde: {{ states('sensor.JOUW_ADRES_inkoopvergoeding_incl_btw_berekend') }} EUR/kWh
+# Berekening: surcharge_excl × 1.21
 # Attributen: Geen
 
 # ================================================================================
@@ -454,18 +505,18 @@ price_info_summary:
 # 📋 CHEATSHEET - WELKE SENSOR VOOR WELK DOEL?
 #
 # ✅ VERBRUIK OPTIMALISEREN (apparaten inschakelen bij lage prijs):
-#    → sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw
+#    → sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat
 #    → attributes.price_info_summary.next_24h
 #    → sensor.tibber_pulse_JOUW_ADRES_vandaag_laagste_prijs
 #    → sensor.tibber_pulse_JOUW_ADRES_morgen_laagste_prijs
 #
 # ✅ ZONNEPANELEN TERUGLEVERING (omvormer aan/uit):
-#    → sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten
+#    → sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge
 #    → sensor.tibber_pulse_JOUW_ADRES_vandaag_laagste_spotprijs
 #    → OF: gebruik custom template sensor voor netto tarief (zie template_teruglevering_netto_tarief.yaml)
 #
 # ✅ BATTERIJ LADEN (alleen bij negatieve prijzen):
-#    → sensor.tibber_pulse_JOUW_ADRES_basis_spotprijs_excl_kosten < 0
+#    → sensor.tibber_pulse_JOUW_ADRES_electricity_base_price_without_surcharge < 0
 #
 # ✅ GRAFIEKEN/DASHBOARDS (24/48 uur vooruitkijkend):
 #    → attributes.price_info_summary.next_24h (rolling 24 uur)
@@ -482,8 +533,8 @@ price_info_summary:
 #    → sensor.tibber_pulse_JOUW_ADRES_accumulated_production_current_hour
 #
 # ❌ NIET GEBRUIKEN VOOR AUTOMATIES:
-#    → sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw_berekend (debug only!)
-#    → sensor.tibber_pulse_JOUW_ADRES_prijs_excl_energiebelasting (incomplete)
+#    → sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat_calculated (debug only!)
+#    → sensor.tibber_pulse_JOUW_ADRES_electricity_price_excl_energy_tax_incl_vat (incomplete)
 
 # ================================================================================
 # DEEL 4: ENTITEITEN DIE NIET BESTAAN (VAAK GEVRAAGD)
@@ -503,7 +554,7 @@ price_info_summary:
 # VOORBEELD: ALLE PRIJZEN VAN VANDAAG UITPRINTEN
 # ================================================================================
 
-{% set sensor_name = 'sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw' %}
+{% set sensor_name = 'sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat' %}
 {% set prices = state_attr(sensor_name, 'price_info_summary') %}
 {% if prices and prices.today_all %}
 Vandaag prijzen ({{ prices.today_all | length }} kwartieren):
@@ -512,14 +563,14 @@ Vandaag prijzen ({{ prices.today_all | length }} kwartieren):
 {% endfor %}
 {% else %}
 ERROR: Sensor '{{ sensor_name }}' niet gevonden of price_info_summary niet beschikbaar.
-Vervang JOUW_ADRES met je eigen adres (bijv. maanstraat_17).
+Vervang JOUW_ADRES met je eigen adres (bijv. rijksweg_100).
 {% endif %}
 
 # ================================================================================
 # VOORBEELD: GOEDKOOPSTE 4 UREN VANDAAG VINDEN
 # ================================================================================
 
-{% set sensor_name = 'sensor.tibber_pulse_JOUW_ADRES_totale_prijs_incl_btw' %}
+{% set sensor_name = 'sensor.tibber_pulse_JOUW_ADRES_electricity_price_total_incl_vat' %}
 {% set prices = state_attr(sensor_name, 'price_info_summary') %}
 {% if prices and prices.today_all %}
 {% set sorted = prices.today_all | sort(attribute='total') %}
@@ -529,28 +580,40 @@ Goedkoopste 4 uren vandaag:
 {% endfor %}
 {% else %}
 ERROR: Sensor '{{ sensor_name }}' niet gevonden of price_info_summary niet beschikbaar.
-Vervang JOUW_ADRES met je eigen adres (bijv. maanstraat_17).
+Vervang JOUW_ADRES met je eigen adres (bijv. rijksweg_100).
 {% endif %}
 
 # ================================================================================
 # TOTAAL AANTAL SENSOREN
 # ================================================================================
 #
-# PRIJZEN: 19 sensoren
-#   - 1 hoofd totale prijs sensor (INGESCHAKELD)
-#   - 1 spotprijs sensor (UITGESCHAKELD)
-#   - 6 min/max/avg vandaag/morgen totale prijs (INGESCHAKELD)
-#   - 6 min/max/avg vandaag/morgen spotprijs (INGESCHAKELD)
-#   - 4 energiebelasting/surcharge sensoren (UITGESCHAKELD)
-#   - 1 berekende prijs sensor (UITGESCHAKELD)
+# PRIJZEN: 25 sensoren totaal
+#   - 1 hoofd totale prijs sensor (INGESCHAKELD) [tibber_pulse_*]
+#   - 1 spotprijs sensor (UITGESCHAKELD) [tibber_pulse_*]
+#   - 6 min/max/avg vandaag/morgen totale prijs (INGESCHAKELD) [tibber_pulse_*]
+#   - 6 min/max/avg vandaag/morgen spotprijs (INGESCHAKELD) [tibber_pulse_*]
+#   - 2 energiebelasting sensoren (UITGESCHAKELD) [tibber_pulse_*]
+#   - 2 surcharge sensoren (UITGESCHAKELD) [GEEN tibber_pulse prefix!]
+#   - 3 berekende/debug sensoren (UITGESCHAKELD) [tibber_pulse_*]
+#   - 4 prijs ranking sensoren (UITGESCHAKELD, legacy) [tibber_pulse_*]
 #
-# VERBRUIK/PRODUCTIE (Tibber Pulse): ~20 sensoren
-#   - Vermogen sensoren (power, average, min, max)
-#   - Cumulatieve sensoren (consumption, production, cost, reward)
-#   - Maandelijkse statistieken (month_cost, month_cons, peak_hour)
-#   - Elektrische metingen (current L1/L2/L3, voltage, power_factor)
-#   - Hardware info (signal_strength)
+# VERBRUIK/PRODUCTIE (Tibber Pulse): 21 sensoren
+#   - 1 maandelijkse kosten sensor [tibber_pulse_*]
+#   - 1 peak hour sensor [tibber_pulse_*]
+#   - 1 peak hour tijd sensor [tibber_pulse_*]
+#   - 1 maandelijks verbruik sensor [tibber_pulse_*]
+#   - 4 vermogen sensoren (power, average, min, max) [tibber_pulse_*]
+#   - 6 cumulatieve sensoren (consumption, production, cost, reward, etc) [tibber_pulse_*]
+#   - 3 voltage sensoren (phase 1/2/3) [tibber_pulse_*]
+#   - 3 current sensoren (L1/L2/L3) [tibber_pulse_*]
+#   - 1 signal strength sensor [tibber_pulse_*]
 #
-# TOTAAL: ~39 sensoren per adres
+# TOTAAL: 46 sensoren per adres
+#   - 44 sensoren met "tibber_pulse_JOUW_ADRES_" prefix
+#   - 2 sensoren met "JOUW_ADRES_" prefix (surcharge sensors)
+#
+# BELANGRIJK:
+# - "tibber_pulse_" sensoren komen van de Tibber Pulse hardware + Tibber API
+# - Sensoren ZONDER "tibber_pulse_" komen van de integratie configuratie
 #
 # ================================================================================
